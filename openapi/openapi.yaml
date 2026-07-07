@@ -1,0 +1,241 @@
+openapi: 3.1.0
+info:
+  title: Grimoire API
+  description: Documentation retrieval service for AI agents, by Monadeo.
+  version: 0.3.0
+servers:
+  - url: https://grimoire-api.monadeo.com/v1
+    description: Production
+  - url: https://grimoire-api-qa.monadeo.com/v1
+    description: QA
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Unauthenticated liveness probe
+      security: []
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+                  revision: { type: string }
+  /search:
+    post:
+      operationId: search
+      summary: Hybrid documentation search across up to 5 source@version targets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query, sources]
+              properties:
+                query: { type: string, maxLength: 1000 }
+                sources:
+                  type: array
+                  minItems: 1
+                  maxItems: 5
+                  items:
+                    type: object
+                    required: [source]
+                    properties:
+                      source: { type: string }
+                      version: { type: string, default: latest }
+                language: { type: string }
+                top_k: { type: integer, default: 8, minimum: 1, maximum: 20 }
+                candidates_per_source: { type: integer, default: 50, minimum: 10, maximum: 100 }
+                max_response_tokens: { type: integer }
+      responses:
+        "200":
+          description: Ranked, attributed chunks
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results, confidence, reranked, resolved_versions, usage]
+                properties:
+                  results:
+                    type: array
+                    items: { $ref: "#/components/schemas/Chunk" }
+                  confidence: { type: string, enum: [strong, weak] }
+                  reranked: { type: boolean }
+                  resolved_versions:
+                    type: object
+                    additionalProperties: { type: string }
+                  usage:
+                    type: object
+                    properties:
+                      retrievals_remaining: { type: [integer, "null"] }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+        "503": { $ref: "#/components/responses/Error" }
+  /sources:
+    get:
+      operationId: listSources
+      summary: List accessible sources (public + caller tenant)
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Source cards
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items: { $ref: "#/components/schemas/SourceCard" }
+  /sources/{sourceId}/versions:
+    get:
+      operationId: listVersions
+      summary: All versions of a source
+      parameters:
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Versions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        version_id: { type: string }
+                        semver: { type: [string, "null"] }
+                        ingested_at: { type: string }
+                        status: { type: string }
+                        is_latest: { type: boolean }
+                        chunk_count: { type: integer }
+        "404": { $ref: "#/components/responses/Error" }
+  /documents/{chunkId}/context:
+    get:
+      operationId: getDocumentContext
+      summary: Chunk plus neighbors in the same document
+      parameters:
+        - { name: chunkId, in: path, required: true, schema: { type: string } }
+        - { name: window, in: query, schema: { type: integer, default: 2, maximum: 5 } }
+      responses:
+        "200":
+          description: Neighboring chunks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chunks:
+                    type: array
+                    items: { $ref: "#/components/schemas/ContextChunk" }
+        "404": { $ref: "#/components/responses/Error" }
+  /catalog:
+    get:
+      operationId: getCatalog
+      summary: Public source catalog (unauthenticated, cached)
+      security: []
+      responses:
+        "200":
+          description: Public sources
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items: { $ref: "#/components/schemas/SourceCard" }
+  /feedback:
+    post:
+      operationId: reportResult
+      summary: Report a retrieved chunk as helpful, incorrect, or outdated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chunk_id, verdict]
+              properties:
+                chunk_id: { type: string }
+                verdict: { type: string, enum: [helpful, incorrect, outdated] }
+                note: { type: string, maxLength: 1000 }
+      responses:
+        "201":
+          description: Recorded
+        "404": { $ref: "#/components/responses/Error" }
+  /jobs/{jobId}:
+    get:
+      operationId: getJob
+      summary: Ingestion job status (SSE with Accept text/event-stream)
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Job document (or SSE stream)
+        "404": { $ref: "#/components/responses/Error" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Firebase ID token or machine token (mt_ prefix)
+  responses:
+    Error:
+      description: Structured error
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: { type: string }
+              message: { type: string }
+  schemas:
+    SourceCard:
+      type: object
+      properties:
+        source_id: { type: string }
+        display_name: { type: string }
+        visibility: { type: string, enum: [public, private] }
+        latest_version: { type: [string, "null"] }
+        languages: { type: array, items: { type: string } }
+        origin_url: { type: [string, "null"] }
+    Chunk:
+      type: object
+      required: [chunk_id, source, version, score, text, origin_url, token_count]
+      properties:
+        chunk_id: { type: string }
+        source: { type: string }
+        version: { type: string }
+        ingested_at: { type: string }
+        score: { type: number }
+        heading_path: { type: array, items: { type: string } }
+        text: { type: string }
+        token_count: { type: integer }
+        origin_url: { type: string }
+    ContextChunk:
+      type: object
+      properties:
+        chunk_id: { type: string }
+        text: { type: string }
+        heading_path: { type: array, items: { type: string } }
+        origin_url: { type: string }
+        token_count: { type: integer }
+# Contract-first rule: endpoints are added HERE before code; clients generate from
+# this file. Management/staff surface documented in docs/01-design/03-query-path-service.md;
+# added here as the open clients need them.

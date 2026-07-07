@@ -1,0 +1,53 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write # npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm check
+
+      # Signed npm publish with provenance attestations, reproducible from tag.
+      - name: Publish packages
+        run: |
+          for pkg in core cli mcp; do
+            pnpm --filter "@monadeo/grimoire-$pkg" publish --access public --no-git-checks --provenance
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  binaries:
+    runs-on: ${{ matrix.os }}
+    needs: publish
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with: { node-version: "24", cache: pnpm }
+      - uses: oven-sh/setup-bun@v2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Standalone CLI binary (no Node install needed on the target machine).
+      - run: bun build --compile packages/cli/dist/index.js --outfile grimoire-${{ matrix.os }}
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: grimoire-${{ matrix.os }}*

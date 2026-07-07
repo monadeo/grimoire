@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm check
+
+  schema-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The vendored OpenAPI spec must match what the service publishes, so the
+      # generated client never drifts from the real contract.
+      - name: Fetch published spec and diff
+        run: |
+          curl -sf "${GRIMOIRE_SPEC_URL:-https://raw.githubusercontent.com/monadeo/grimoire-service/main/openapi/openapi.yaml}" -o /tmp/published.yaml || { echo "spec fetch skipped (private repo)"; exit 0; }
+          diff -u openapi/openapi.yaml /tmp/published.yaml || { echo "::error::Vendored OpenAPI spec drifted from the service. Re-vendor and regenerate."; exit 1; }

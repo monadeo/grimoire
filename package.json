@@ -1,0 +1,32 @@
+{
+  "name": "grimoire-clients",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.8.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "pnpm --filter @monadeo/grimoire-core build && pnpm --filter @monadeo/grimoire-cli build && pnpm --filter @monadeo/grimoire-mcp build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r --workspace-concurrency=1 test",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "gen:types": "openapi-typescript openapi/openapi.yaml -o packages/core/src/generated/schema.ts",
+    "release:patch": "pnpm check && pnpm version patch -m \"Release v%s\" && git push --follow-tags",
+    "release:minor": "pnpm check && pnpm version minor -m \"Release v%s\" && git push --follow-tags",
+    "release:major": "pnpm check && pnpm version major -m \"Release v%s\" && git push --follow-tags"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.1.0",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0",
+    "openapi-typescript": "^7.9.1",
+    "prettier": "^3.9.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.1",
+    "vitest": "^4.1.10"
+  }
+}
