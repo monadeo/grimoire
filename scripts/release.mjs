@@ -24,5 +24,7 @@ for (const dir of packageDirs) {
 
 run(`git add ${packageDirs.map((d) => `${d}/package.json`).join(" ")}`);
 run(`git commit -m "${version}"`);
-run(`git tag ${version}`);
+// Annotated tag — `git push --follow-tags` only pushes annotated tags, and the
+// tag push is what triggers the publish workflow.
+run(`git tag -a ${version} -m ${version}`);
 run("git push --follow-tags");
