@@ -14,9 +14,9 @@
     "test": "pnpm -r --workspace-concurrency=1 test",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "gen:types": "openapi-typescript openapi/openapi.yaml -o packages/core/src/generated/schema.ts",
-    "release:patch": "pnpm check && pnpm version patch -m \"Release v%s\" && git push --follow-tags",
-    "release:minor": "pnpm check && pnpm version minor -m \"Release v%s\" && git push --follow-tags",
-    "release:major": "pnpm check && pnpm version major -m \"Release v%s\" && git push --follow-tags"
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

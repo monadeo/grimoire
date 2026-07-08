@@ -18,9 +18,23 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@napi-rs/keyring": "^1.2.0"
+    "@napi-rs/keyring": "^1.3.0"
   },
   "devDependencies": {
     "@types/node": "^26.1.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "description": "Typed API client, browser login, and config resolution for Grimoire — documentation retrieval for AI agents",
+  "homepage": "https://grimoire.monadeo.com",
+  "bugs": "https://github.com/monadeo/grimoire/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monadeo/grimoire.git",
+    "directory": "packages/core"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

@@ -2,11 +2,11 @@ openapi: 3.1.0
 info:
   title: Grimoire API
   description: Documentation retrieval service for AI agents, by Monadeo.
-  version: 0.3.0
+  version: 0.5.6
 servers:
-  - url: https://grimoire-api.monadeo.com/v1
+  - url: https://grimoire-api.monadeo.com
     description: Production
-  - url: https://grimoire-api-qa.monadeo.com/v1
+  - url: https://grimoire-api-qa.monadeo.com
     description: QA
 security:
   - bearerAuth: []
@@ -27,7 +27,7 @@ paths:
                 properties:
                   status: { type: string, const: ok }
                   revision: { type: string }
-  /search:
+  /v1/search:
     post:
       operationId: search
       summary: Hybrid documentation search across up to 5 source@version targets
@@ -54,6 +54,12 @@ paths:
                 top_k: { type: integer, default: 8, minimum: 1, maximum: 20 }
                 candidates_per_source: { type: integer, default: 50, minimum: 10, maximum: 100 }
                 max_response_tokens: { type: integer }
+                include_candidate_ids:
+                  type: boolean
+                  default: false
+                  description:
+                    Also return the fused pre-rerank candidate id list (quality-harness
+                    instrumentation; candidate-stage recall is scored against it).
       responses:
         "200":
           description: Ranked, attributed chunks
@@ -75,13 +81,16 @@ paths:
                     type: object
                     properties:
                       retrievals_remaining: { type: [integer, "null"] }
+                  candidate_ids:
+                    type: array
+                    items: { type: string }
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
         "503": { $ref: "#/components/responses/Error" }
-  /sources:
+  /v1/sources:
     get:
       operationId: listSources
       summary: List accessible sources (public + caller tenant)
@@ -98,7 +107,43 @@ paths:
                   sources:
                     type: array
                     items: { $ref: "#/components/schemas/SourceCard" }
-  /sources/{sourceId}/versions:
+    post:
+      operationId: submitSource
+      summary: Submit a documentation source for ingestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, format: uri }
+                source_id: { type: string, pattern: "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,80}$" }
+                upload_ref:
+                  type: string
+                  description: GCS upload reference for private zip submissions (requires source_id)
+                version: { type: string, pattern: "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,80}$" }
+                visibility: { type: string, enum: [public, private], default: public }
+                webhook_url: { type: string, format: uri }
+                scrape_config: { type: object }
+      responses:
+        "201":
+          description: Ingestion job created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [job_id, source_id, version_id]
+                properties:
+                  job_id: { type: string }
+                  source_id: { type: string }
+                  version_id: { type: string }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+        "503": { $ref: "#/components/responses/Error" }
+  /v1/sources/{sourceId}/versions:
     get:
       operationId: listVersions
       summary: All versions of a source
@@ -124,13 +169,13 @@ paths:
                         is_latest: { type: boolean }
                         chunk_count: { type: integer }
         "404": { $ref: "#/components/responses/Error" }
-  /documents/{chunkId}/context:
+  /v1/documents/{chunkId}/context:
     get:
       operationId: getDocumentContext
       summary: Chunk plus neighbors in the same document
       parameters:
         - { name: chunkId, in: path, required: true, schema: { type: string } }
-        - { name: window, in: query, schema: { type: integer, default: 2, maximum: 5 } }
+        - { name: window, in: query, schema: { type: integer, default: 2, minimum: 0, maximum: 5 } }
       responses:
         "200":
           description: Neighboring chunks
@@ -143,7 +188,7 @@ paths:
                     type: array
                     items: { $ref: "#/components/schemas/ContextChunk" }
         "404": { $ref: "#/components/responses/Error" }
-  /catalog:
+  /v1/catalog:
     get:
       operationId: getCatalog
       summary: Public source catalog (unauthenticated, cached)
@@ -159,7 +204,21 @@ paths:
                   sources:
                     type: array
                     items: { $ref: "#/components/schemas/SourceCard" }
-  /feedback:
+  /v1/catalog/{sourceId}:
+    get:
+      operationId: getCatalogSource
+      summary: One public source card (unauthenticated, cached)
+      security: []
+      parameters:
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Source card
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SourceCard" }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/feedback:
     post:
       operationId: reportResult
       summary: Report a retrieved chunk as helpful, incorrect, or outdated
@@ -177,8 +236,10 @@ paths:
       responses:
         "201":
           description: Recorded
+        "400": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
-  /jobs/{jobId}:
+        "429": { $ref: "#/components/responses/Error" }
+  /v1/jobs/{jobId}:
     get:
       operationId: getJob
       summary: Ingestion job status (SSE with Accept text/event-stream)
@@ -187,7 +248,409 @@ paths:
       responses:
         "200":
           description: Job document (or SSE stream)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
         "404": { $ref: "#/components/responses/Error" }
+  /v1/jobs/{jobId}/errors:
+    get:
+      operationId: getJobErrors
+      summary: Per-document errors of an ingestion job
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Errors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        stage: { type: string }
+                        document_url: { type: string }
+                        message: { type: string }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/jobs/{jobId}/quarantine:
+    get:
+      operationId: listQuarantinedChunks
+      summary: Tenant self-review of private quarantined chunks (admin/owner)
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Quarantined chunks awaiting tenant review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chunks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        chunk_id: { type: string }
+                        text: { type: string }
+                        heading_path: { type: array, items: { type: string } }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/jobs/{jobId}/quarantine/{chunkId}/release:
+    post:
+      operationId: releaseQuarantinedChunk
+      summary: Release a quarantined private chunk into the index
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string } }
+        - { name: chunkId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/jobs/{jobId}/quarantine/{chunkId}/delete:
+    post:
+      operationId: deleteQuarantinedChunk
+      summary: Permanently discard a quarantined private chunk
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string } }
+        - { name: chunkId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/tickets:
+    get:
+      operationId: listTickets
+      summary: Tenant's support tickets
+      responses:
+        "200":
+          description: Tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items: { $ref: "#/components/schemas/Ticket" }
+    post:
+      operationId: openTicket
+      summary: Open a re-ingest or escalation ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, source_id, reason]
+              properties:
+                type: { type: string, enum: [reingest, escalation] }
+                source_id: { type: string }
+                reason: { type: string, maxLength: 2000 }
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket_id: { type: string }
+        "400": { $ref: "#/components/responses/Error" }
+  /v1/tickets/{ticketId}/messages:
+    get:
+      operationId: listTicketMessages
+      summary: Messages on a ticket
+      parameters:
+        - { name: ticketId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Messages
+        "404": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: postTicketMessage
+      summary: Add a message to a ticket
+      parameters:
+        - { name: ticketId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string, maxLength: 5000 }
+      responses:
+        "201":
+          description: Message added
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/tenants/me:
+    get:
+      operationId: getTenant
+      summary: Caller's tenant profile
+      responses:
+        "200":
+          description: Tenant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Tenant" }
+        "404": { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateTenant
+      summary: Update tenant name / overage settings (owner)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 100 }
+                overage:
+                  type: object
+                  properties:
+                    enabled: { type: boolean }
+                    monthly_cap_usd: { type: number, minimum: 0 }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteTenant
+      summary: Request tenant deletion (owner; 30-day erasure cascade)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirm]
+              properties:
+                confirm: { type: string, description: Must equal the tenant id }
+      responses:
+        "202":
+          description: Erasure scheduled
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /v1/tenants/me/usage:
+    get:
+      operationId: getTenantUsage
+      summary: Current-month usage totals
+      responses:
+        "200":
+          description: Usage
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  month: { type: string }
+                  usage:
+                    type: object
+                    additionalProperties: { type: number }
+  /v1/tenants/me/machine-tokens:
+    get:
+      operationId: listMachineTokens
+      summary: List machine tokens (admin/owner, paid plan)
+      responses:
+        "200":
+          description: Tokens (hashes never returned)
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createMachineToken
+      summary: Create a machine token (shown once)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label, scopes]
+              properties:
+                label: { type: string, maxLength: 60 }
+                scopes:
+                  type: array
+                  items: { type: string, enum: [search, ingest] }
+      responses:
+        "201":
+          description: Token created — the raw token is returned exactly once
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /v1/tenants/me/machine-tokens/{tokenId}:
+    delete:
+      operationId: revokeMachineToken
+      summary: Revoke a machine token
+      parameters:
+        - { name: tokenId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "403": { $ref: "#/components/responses/Error" }
+  /v1/tenants/me/webhook-secret:
+    post:
+      operationId: rotateWebhookSecret
+      summary: Rotate the tenant webhook HMAC secret (shown once)
+      responses:
+        "200":
+          description: New secret
+        "403": { $ref: "#/components/responses/Error" }
+  /v1/tenants/me/members:
+    get:
+      operationId: listMembers
+      summary: Tenant members
+      responses:
+        "200":
+          description: Members
+  /v1/tenants/me/members/{userId}:
+    delete:
+      operationId: removeMember
+      summary: Remove a member (admin/owner; owner cannot be removed)
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /v1/tenants/me/invites:
+    get:
+      operationId: listInvites
+      summary: Open invites
+      responses:
+        "200":
+          description: Invites
+    post:
+      operationId: createInvite
+      summary: Create a shareable invite link (token shown once)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string, enum: [member, admin], default: member }
+      responses:
+        "201":
+          description: Invite created
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /v1/tenants/me/invites/{inviteId}:
+    delete:
+      operationId: revokeInvite
+      summary: Revoke an invite
+      parameters:
+        - { name: inviteId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+  /v1/invites/redeem:
+    post:
+      operationId: redeemInvite
+      summary: Redeem an invite token (single use, seat-limited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Joined
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "410": { $ref: "#/components/responses/Error" }
+  /v1/billing/checkout:
+    post:
+      operationId: createCheckout
+      summary: Stripe checkout (Phase 6 — currently 501)
+      responses:
+        "501": { $ref: "#/components/responses/Error" }
+  /v1/billing/portal:
+    post:
+      operationId: createBillingPortal
+      summary: Stripe portal (Phase 6 — currently 501)
+      responses:
+        "501": { $ref: "#/components/responses/Error" }
+  /v1/webhooks/stripe:
+    post:
+      operationId: stripeWebhook
+      summary: Stripe events (HMAC-verified; Phase 6 — currently 501)
+      security: []
+      responses:
+        "501": { $ref: "#/components/responses/Error" }
+  /auth/cli/start:
+    get:
+      operationId: cliAuthStart
+      summary: Begin the CLI browser login (hosted sign-in page)
+      security: []
+      parameters:
+        - name: code_challenge
+          in: query
+          required: true
+          schema: { type: string, pattern: "^[A-Za-z0-9_-]{43}$" }
+          description: PKCE S256 challenge
+      responses:
+        "200":
+          description: Hosted sign-in page (HTML)
+        "400": { $ref: "#/components/responses/Error" }
+  /auth/cli/complete:
+    post:
+      operationId: cliAuthComplete
+      summary: Hosted page posts the signed-in user's refresh token against the code
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, refresh_token, id_token]
+              properties:
+                code: { type: string }
+                refresh_token: { type: string }
+                id_token: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Ok" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /auth/cli/exchange:
+    post:
+      operationId: cliAuthExchange
+      summary: CLI exchanges the one-time code + PKCE verifier for the refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, code_verifier]
+              properties:
+                code: { type: string }
+                code_verifier: { type: string }
+      responses:
+        "200":
+          description: Refresh token (one-shot; the code is consumed)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [refresh_token]
+                properties:
+                  refresh_token: { type: string }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "428":
+          description: Authorization pending — the user has not completed sign-in yet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, const: authorization_pending }
 components:
   securitySchemes:
     bearerAuth:
@@ -195,6 +658,14 @@ components:
       scheme: bearer
       description: Firebase ID token or machine token (mt_ prefix)
   responses:
+    Ok:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: { type: boolean }
     Error:
       description: Structured error
       content:
@@ -236,6 +707,43 @@ components:
         heading_path: { type: array, items: { type: string } }
         origin_url: { type: string }
         token_count: { type: integer }
+    Job:
+      type: object
+      properties:
+        job_id: { type: string }
+        source_id: { type: string }
+        version_id: { type: string }
+        status:
+          type: string
+          enum: [validating, pending_review, fetching, parsing, indexing, publishing, complete, failed, rejected]
+        counters:
+          type: object
+          additionalProperties: { type: number }
+    Ticket:
+      type: object
+      properties:
+        ticket_id: { type: string }
+        type: { type: string, enum: [reingest, escalation] }
+        source_id: { type: string }
+        reason: { type: string }
+        status: { type: string }
+    Tenant:
+      type: object
+      properties:
+        tenant_id: { type: string }
+        name: { type: string }
+        plan: { type: string, enum: [free, team] }
+        seat_limit: { type: integer }
+        overage:
+          type: object
+          properties:
+            enabled: { type: boolean }
+            monthly_cap_usd: { type: number }
+        billing_state:
+          type: object
+          properties:
+            suspended: { type: boolean }
+            grace_until: { type: string }
 # Contract-first rule: endpoints are added HERE before code; clients generate from
-# this file. Management/staff surface documented in docs/01-design/03-query-path-service.md;
-# added here as the open clients need them.
+# this file. Staff-only routes (/v1/staff/*) are deliberately not part of the public
+# contract — they are internal, CF-Access-gated, and consumed by the staff console only.

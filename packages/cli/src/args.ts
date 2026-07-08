@@ -5,7 +5,9 @@ export interface ParsedArgs {
   bools: Set<string>;
 }
 
-const BOOL_FLAGS = new Set(["json", "compact", "no-rerank", "watch", "errors", "private", "names"]);
+export class UsageError extends Error {}
+
+const BOOL_FLAGS = new Set(["json", "compact", "watch", "private", "names"]);
 
 export function parseArgs(argv: string[], aliases: Record<string, string> = {}): ParsedArgs {
   const positionals: string[] = [];
@@ -18,7 +20,12 @@ export function parseArgs(argv: string[], aliases: Record<string, string> = {}):
       if (BOOL_FLAGS.has(name)) {
         bools.add(name);
       } else {
-        (flags[name] ??= []).push(argv[++i]);
+        const value = argv[i + 1];
+        if (value === undefined || value.startsWith("-")) {
+          throw new UsageError(`Flag ${arg} requires a value`);
+        }
+        (flags[name] ??= []).push(value);
+        i++;
       }
     } else {
       positionals.push(arg);

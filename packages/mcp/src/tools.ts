@@ -14,9 +14,22 @@ const ARG_ALIASES: Record<string, string> = {
   library: "source",
 };
 
-export function rewriteArgs(args: Record<string, unknown>): Record<string, unknown> {
+// A key that the current tool declares is never an alias (list_sources takes `q`
+// literally), and an alias only fills its target when the target is absent.
+export function rewriteArgs(
+  args: Record<string, unknown>,
+  schemaKeys: readonly string[],
+): Record<string, unknown> {
+  const declared = new Set(schemaKeys);
   const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(args)) out[ARG_ALIASES[k] ?? k] = v;
+  for (const [k, v] of Object.entries(args)) {
+    if (declared.has(k) || !(k in ARG_ALIASES)) out[k] = v;
+  }
+  for (const [k, v] of Object.entries(args)) {
+    if (declared.has(k)) continue;
+    const target = ARG_ALIASES[k];
+    if (target !== undefined) out[target] ??= v;
+  }
   return out;
 }
 
@@ -72,7 +85,7 @@ export const TOOLS: ToolDef[] = [
         res.results
           .map(
             (r) =>
-              `## ${r.heading_path.join(" › ")} (${r.source}@${r.version})\nSource: ${r.origin_url}\nchunk_id: ${r.chunk_id}\n\n${r.text}`,
+              `## ${(r.heading_path ?? []).join(" › ")} (${r.source}@${r.version})\nSource: ${r.origin_url}\nchunk_id: ${r.chunk_id}\n\n${r.text}`,
           )
           .join("\n\n---\n\n")
       );
@@ -84,7 +97,7 @@ export const TOOLS: ToolDef[] = [
     schema: { chunk_id: z.string(), window: z.number().optional() },
     async handler(args) {
       const res = await client.getContext(String(args.chunk_id), (args.window as number) ?? 2);
-      return JSON.stringify(res.chunks, null, 2);
+      return JSON.stringify(res.chunks ?? [], null, 2);
     },
   },
   {
@@ -92,7 +105,7 @@ export const TOOLS: ToolDef[] = [
     description: "Discover indexed documentation sources; supports alias text search.",
     schema: { q: z.string().optional() },
     async handler(args) {
-      return JSON.stringify((await client.listSources(args.q as string | undefined)).sources, null, 2);
+      return JSON.stringify((await client.listSources(args.q as string | undefined)).sources ?? [], null, 2);
     },
   },
   {
@@ -100,7 +113,7 @@ export const TOOLS: ToolDef[] = [
     description: "List indexed versions of a source.",
     schema: { source: z.string() },
     async handler(args) {
-      return JSON.stringify((await client.listVersions(String(args.source))).versions, null, 2);
+      return JSON.stringify((await client.listVersions(String(args.source))).versions ?? [], null, 2);
     },
   },
   {

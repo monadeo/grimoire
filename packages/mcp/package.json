@@ -6,7 +6,9 @@
   "bin": {
     "grimoire-mcp": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "node esbuild.config.mjs",
     "typecheck": "tsc --noEmit",
@@ -24,5 +26,16 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.0",
     "esbuild": "^0.28.1"
+  },
+  "description": "Grimoire MCP server — documentation retrieval tools for AI coding agents (stdio + streamable HTTP)",
+  "homepage": "https://grimoire.monadeo.com",
+  "bugs": "https://github.com/monadeo/grimoire/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monadeo/grimoire.git",
+    "directory": "packages/mcp"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

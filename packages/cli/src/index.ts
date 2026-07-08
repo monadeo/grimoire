@@ -4,11 +4,12 @@ import {
   ApiError,
   browserLogin,
   clearRefreshToken,
+  readRefreshToken,
   resolveDefaultSources,
   loadGlobalConfig,
   type SourcePin,
 } from "@monadeo/grimoire-core";
-import { parseArgs } from "./args.js";
+import { parseArgs, UsageError } from "./args.js";
 import { printResults, printCompact, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
@@ -34,14 +35,17 @@ const HELP = `grimoire — documentation retrieval for AI agents
   grimoire login | logout | whoami
   grimoire setup <claude-code|cursor|windsurf|codex>
   grimoire init
-  grimoire search "<query>" [-s nextjs@15 -s react] [--lang en] [--top-k 8] [--json|--compact] [--no-rerank]
+  grimoire search "<query>" [-s nextjs@15 -s react] [--lang en] [--top-k 8] [--json|--compact]
   grimoire sources [--q <kw>] [--json]
   grimoire versions <source> [--json]
   grimoire doc <chunk_id> [--window 2]
   grimoire report <chunk_id> --verdict incorrect|outdated|helpful [--note "..."]
   grimoire ingest <url> [--version 15.2] [--private] [--webhook URL] [--watch]
-  grimoire jobs <job_id> [--watch] [--errors]
+  grimoire jobs <job_id> [--watch]
   grimoire mcp [--http]
+
+  env: GRIMOIRE_AUTH_TOKEN — machine token (CI, instead of login)
+       GRIMOIRE_API_URL   — API origin without a path, e.g. https://grimoire-api-qa.monadeo.com
 `;
 
 async function main(argv: string[]): Promise<number> {
@@ -77,9 +81,23 @@ async function main(argv: string[]): Promise<number> {
   try {
     switch (command) {
       case "whoami": {
-        const usage = await client.search({ query: "ping", sources: resolveDefaultSources().slice(0, 1).length ? resolveDefaultSources().slice(0, 1) : [{ source: "_" }] }).catch(() => null);
-        process.stdout.write(usage ? "Authenticated.\n" : "Authenticated (no default source to probe).\n");
-        return EXIT.ok;
+        if (process.env.GRIMOIRE_AUTH_TOKEN) {
+          process.stdout.write("machine token configured (GRIMOIRE_AUTH_TOKEN)\n");
+          return EXIT.ok;
+        }
+        if (!readRefreshToken()) {
+          process.stderr.write("not logged in — run `grimoire login`\n");
+          return EXIT.authRequired;
+        }
+        try {
+          await client.refreshSession();
+          process.stdout.write("logged in (browser session)\n");
+          return EXIT.ok;
+        } catch (err) {
+          const reason = err instanceof ApiError ? err.code : (err as Error).message;
+          process.stderr.write(`not logged in (${reason}) — run \`grimoire login\`\n`);
+          return EXIT.authRequired;
+        }
       }
       case "search": {
         const query = args.positionals[0];
@@ -106,17 +124,17 @@ async function main(argv: string[]): Promise<number> {
       }
       case "sources": {
         const res = await client.listSources(args.flags.q?.[0]);
-        process.stdout.write(JSON.stringify(res.sources, null, json ? 2 : 0) + "\n");
+        process.stdout.write(JSON.stringify(res.sources ?? [], null, json ? 2 : 0) + "\n");
         return EXIT.ok;
       }
       case "versions": {
         const res = await client.listVersions(args.positionals[0]);
-        process.stdout.write(JSON.stringify(res.versions, null, json ? 2 : 0) + "\n");
+        process.stdout.write(JSON.stringify(res.versions ?? [], null, json ? 2 : 0) + "\n");
         return EXIT.ok;
       }
       case "doc": {
         const res = await client.getContext(args.positionals[0], Number(args.flags.window?.[0] ?? 2));
-        process.stdout.write(JSON.stringify(res.chunks, null, 2) + "\n");
+        process.stdout.write(JSON.stringify(res.chunks ?? [], null, 2) + "\n");
         return EXIT.ok;
       }
       case "report": {
@@ -153,26 +171,60 @@ async function main(argv: string[]): Promise<number> {
   }
 }
 
+const TERMINAL_STATUSES = ["complete", "failed", "rejected"];
+const FAILED_STATUSES = ["failed", "rejected"];
+
 async function printJob(client: GrimoireClient, jobId: string): Promise<number> {
   const job = await client.getJob(jobId);
-  process.stdout.write(`${job.status} ${JSON.stringify(job.counters)}\n`);
-  return job.status === "complete" ? EXIT.ok : EXIT.apiError;
+  const status = job.status ?? "unknown";
+  process.stdout.write(`${status} ${JSON.stringify(job.counters ?? {})}\n`);
+  return FAILED_STATUSES.includes(status) ? EXIT.apiError : EXIT.ok;
+}
+
+const WATCH_POLL_MS = 5_000;
+const WATCH_BACKOFF_CAP_MS = 30_000;
+const WATCH_DEADLINE_MS = 30 * 60_000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 async function watchJob(client: GrimoireClient, jobId: string): Promise<number> {
-  for (;;) {
-    const job = await client.getJob(jobId);
-    process.stdout.write(`${job.status} ${JSON.stringify(job.counters)}\n`);
-    if (["complete", "failed", "rejected"].includes(job.status)) {
-      return job.status === "complete" ? EXIT.ok : EXIT.apiError;
+  const deadline = Date.now() + WATCH_DEADLINE_MS;
+  let backoff = WATCH_POLL_MS;
+  while (Date.now() < deadline) {
+    try {
+      const job = await client.getJob(jobId);
+      const status = job.status ?? "unknown";
+      process.stdout.write(`${status} ${JSON.stringify(job.counters ?? {})}\n`);
+      if (TERMINAL_STATUSES.includes(status)) {
+        return FAILED_STATUSES.includes(status) ? EXIT.apiError : EXIT.ok;
+      }
+      backoff = WATCH_POLL_MS;
+      await sleep(WATCH_POLL_MS);
+    } catch (err) {
+      // Auth/permission/missing-job failures cannot heal on their own — bail out;
+      // anything else (network, 5xx, timeout) is worth retrying with backoff.
+      if (err instanceof ApiError && [401, 403, 404].includes(err.status)) throw err;
+      const reason = err instanceof Error ? err.message : String(err);
+      process.stderr.write(`poll failed (${reason}); retrying in ${backoff / 1000}s\n`);
+      await sleep(backoff);
+      backoff = Math.min(backoff * 2, WATCH_BACKOFF_CAP_MS);
     }
-    await new Promise((r) => setTimeout(r, 5000));
   }
+  process.stderr.write(
+    `Watch deadline (30m) reached; the job is still running. Check later with: grimoire jobs ${jobId}\n`,
+  );
+  return EXIT.apiError;
 }
 
 main(process.argv.slice(2))
   .then((code) => process.exit(code))
   .catch((err) => {
+    if (err instanceof UsageError) {
+      process.stderr.write(`${err.message}\n`);
+      process.exit(EXIT.apiError);
+    }
     process.stderr.write(`fatal: ${(err as Error).message}\n`);
     process.exit(EXIT.apiError);
   });

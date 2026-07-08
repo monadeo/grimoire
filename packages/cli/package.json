@@ -16,11 +16,22 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@monadeo/grimoire-core": "workspace:*",
     "@napi-rs/keyring": "^1.3.0"
   },
   "devDependencies": {
+    "@monadeo/grimoire-core": "workspace:*",
     "@types/node": "^26.1.0",
     "esbuild": "^0.28.1"
+  },
+  "description": "Grimoire CLI — version-correct documentation retrieval for AI coding agents",
+  "homepage": "https://grimoire.monadeo.com",
+  "bugs": "https://github.com/monadeo/grimoire/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monadeo/grimoire.git",
+    "directory": "packages/cli"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

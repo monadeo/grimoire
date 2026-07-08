@@ -20,7 +20,7 @@ function buildServer(): McpServer {
       { description: tool.description, inputSchema: tool.schema },
       async (rawArgs: Record<string, unknown>) => {
         try {
-          const text = await tool.handler(rewriteArgs(rawArgs));
+          const text = await tool.handler(rewriteArgs(rawArgs, Object.keys(tool.schema)));
           return { content: [{ type: "text" as const, text }] };
         } catch (err) {
           const message =
@@ -50,13 +50,17 @@ function runHttp(port: number): void {
   app.use(express.json());
   // Fresh server + transport per request; session lifecycle owned by the client.
   app.post("/mcp", async (req, res) => {
-    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+      enableDnsRebindingProtection: true,
+      allowedHosts: ["127.0.0.1", `127.0.0.1:${port}`, "localhost", `localhost:${port}`],
+    });
     res.on("close", () => void transport.close());
     await buildServer().connect(transport);
     await transport.handleRequest(req, res, req.body);
   });
   app.get("/mcp", (_req, res) => res.status(405).end()); // no server-initiated SSE
-  app.listen(port);
+  app.listen(port, "127.0.0.1");
 }
 
 if (process.argv.includes("--http")) {

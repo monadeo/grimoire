@@ -12,9 +12,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
@@ -32,22 +32,39 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  binaries:
-    runs-on: ${{ matrix.os }}
+  formula-bump:
+    runs-on: ubuntu-latest
     needs: publish
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with: { node-version: "24", cache: pnpm }
-      - uses: oven-sh/setup-bun@v2
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      # Standalone CLI binary (no Node install needed on the target machine).
-      - run: bun build --compile packages/cli/dist/index.js --outfile grimoire-${{ matrix.os }}
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: grimoire-${{ matrix.os }}*
+      - name: Compute sha256 of the published CLI tarball
+        id: tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          TARBALL=""
+          for attempt in 1 2 3 4 5; do
+            TARBALL=$(npm view "@monadeo/grimoire-cli@${VERSION}" dist.tarball 2>/dev/null) && [ -n "$TARBALL" ] && break
+            echo "Registry not ready (attempt $attempt); retrying in 15s..."
+            sleep 15
+          done
+          if [ -z "$TARBALL" ]; then
+            echo "::error::Could not resolve the published tarball for @monadeo/grimoire-cli@${VERSION}."
+            exit 1
+          fi
+          curl -fsSL "$TARBALL" -o cli.tgz
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(shasum -a 256 cli.tgz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Bump Homebrew formula
+        env:
+          TAP_PUSH_TOKEN: ${{ secrets.TAP_PUSH_TOKEN }}
+          VERSION: ${{ steps.tarball.outputs.version }}
+          SHA256: ${{ steps.tarball.outputs.sha256 }}
+        run: |
+          git clone "https://x-access-token:${TAP_PUSH_TOKEN}@github.com/monadeo/homebrew-tap.git" tap
+          cd tap
+          sed -i -E "s#^(  url \").*(\")\$#\1https://registry.npmjs.org/@monadeo/grimoire-cli/-/grimoire-cli-${VERSION}.tgz\2#" Formula/grimoire.rb
+          sed -i -E "s#^(  sha256 \").*(\")\$#\1${SHA256}\2#" Formula/grimoire.rb
+          git config user.name "monadeo-release-bot"
+          git config user.email "release-bot@monadeo.com"
+          git commit -am "grimoire ${VERSION}"
+          git push
