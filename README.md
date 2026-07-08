@@ -10,7 +10,13 @@ backend is closed; the clients contain no secrets and no logic beyond presenting
 ## Install
 
 ```sh
-npm install -g @monadeo.com/grimoire-cli     # or: brew install monadeo/tap/grimoire
+# Homebrew
+brew tap monadeo/tap
+brew install grimoire
+
+# or npm
+npm install -g @monadeo.com/grimoire-cli
+
 grimoire login
 grimoire setup claude-code               # wire the MCP server into your agent
 ```
