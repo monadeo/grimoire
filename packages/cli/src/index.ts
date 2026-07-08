@@ -8,7 +8,7 @@ import {
   resolveDefaultSources,
   loadGlobalConfig,
   type SourcePin,
-} from "@monadeo/grimoire-core";
+} from "@monadeo.com/grimoire-core";
 import { parseArgs, UsageError } from "./args.js";
 import { printResults, printCompact, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
@@ -68,7 +68,7 @@ async function main(argv: string[]): Promise<number> {
     case "init":
       return runInit();
     case "mcp":
-      process.stderr.write("Run the MCP server with: npx @monadeo/grimoire-mcp" + (args.bools.has("http") ? " --http\n" : "\n"));
+      process.stderr.write("Run the MCP server with: npx @monadeo.com/grimoire-mcp" + (args.bools.has("http") ? " --http\n" : "\n"));
       return EXIT.ok;
     case undefined:
     case "help":

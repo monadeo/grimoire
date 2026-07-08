@@ -1,4 +1,4 @@
-import type { SearchResultChunk } from "@monadeo/grimoire-core";
+import type { SearchResultChunk } from "@monadeo.com/grimoire-core";
 
 // Exit codes documented for scripting (clients spec).
 export const EXIT = { ok: 0, apiError: 1, authRequired: 2, quota: 3, notFound: 4 } as const;

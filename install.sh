@@ -5,10 +5,10 @@ set -eu
 if ! command -v npm >/dev/null 2>&1; then
   echo "npm not found. Grimoire requires Node.js 24 or newer."
   echo "Install it from https://nodejs.org (or your package manager), then run:"
-  echo "  npm install -g @monadeo/grimoire-cli"
+  echo "  npm install -g @monadeo.com/grimoire-cli"
   exit 1
 fi
 
-echo "Installing @monadeo/grimoire-cli via npm..."
-npm install -g @monadeo/grimoire-cli
+echo "Installing @monadeo.com/grimoire-cli via npm..."
+npm install -g @monadeo.com/grimoire-cli
 echo "Done. Run: grimoire login"

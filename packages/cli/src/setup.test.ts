@@ -3,7 +3,7 @@ import { mergeCodexToml } from "./commands/setup.js";
 
 const TABLE = `[mcp_servers.grimoire]
 command = "npx"
-args = ["-y", "@monadeo/grimoire-mcp"]
+args = ["-y", "@monadeo.com/grimoire-mcp"]
 `;
 
 describe("mergeCodexToml", () => {

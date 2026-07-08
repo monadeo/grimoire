@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GrimoireClient, resolveDefaultSources, loadGlobalConfig } from "@monadeo/grimoire-core";
+import { GrimoireClient, resolveDefaultSources, loadGlobalConfig } from "@monadeo.com/grimoire-core";
 
 // Hallucinated-argument rewriting before schema validation — cheap, model-agnostic
 // robustness (learned from the incumbent). Maps common LLM variants to our names.

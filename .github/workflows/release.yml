@@ -33,11 +33,11 @@ jobs:
         run: |
           mkdir -p /tmp/tarballs
           for pkg in core cli mcp; do
-            pnpm --filter "@monadeo/grimoire-$pkg" pack --pack-destination /tmp/tarballs
+            pnpm --filter "@monadeo.com/grimoire-$pkg" pack --pack-destination /tmp/tarballs
           done
-          for tgz in /tmp/tarballs/monadeo-grimoire-core-*.tgz \
-                     /tmp/tarballs/monadeo-grimoire-cli-*.tgz \
-                     /tmp/tarballs/monadeo-grimoire-mcp-*.tgz; do
+          for tgz in /tmp/tarballs/monadeo.com-grimoire-core-*.tgz \
+                     /tmp/tarballs/monadeo.com-grimoire-cli-*.tgz \
+                     /tmp/tarballs/monadeo.com-grimoire-mcp-*.tgz; do
             npm publish "$tgz" --provenance --access public
           done
 
@@ -51,12 +51,12 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           TARBALL=""
           for attempt in 1 2 3 4 5; do
-            TARBALL=$(npm view "@monadeo/grimoire-cli@${VERSION}" dist.tarball 2>/dev/null) && [ -n "$TARBALL" ] && break
+            TARBALL=$(npm view "@monadeo.com/grimoire-cli@${VERSION}" dist.tarball 2>/dev/null) && [ -n "$TARBALL" ] && break
             echo "Registry not ready (attempt $attempt); retrying in 15s..."
             sleep 15
           done
           if [ -z "$TARBALL" ]; then
-            echo "::error::Could not resolve the published tarball for @monadeo/grimoire-cli@${VERSION}."
+            echo "::error::Could not resolve the published tarball for @monadeo.com/grimoire-cli@${VERSION}."
             exit 1
           fi
           curl -fsSL "$TARBALL" -o cli.tgz
@@ -71,7 +71,7 @@ jobs:
         run: |
           git clone "https://x-access-token:${TAP_PUSH_TOKEN}@github.com/monadeo/homebrew-tap.git" tap
           cd tap
-          sed -i -E "s#^(  url \").*(\")\$#\1https://registry.npmjs.org/@monadeo/grimoire-cli/-/grimoire-cli-${VERSION}.tgz\2#" Formula/grimoire.rb
+          sed -i -E "s#^(  url \").*(\")\$#\1https://registry.npmjs.org/@monadeo.com/grimoire-cli/-/grimoire-cli-${VERSION}.tgz\2#" Formula/grimoire.rb
           sed -i -E "s#^(  sha256 \").*(\")\$#\1${SHA256}\2#" Formula/grimoire.rb
           git config user.name "monadeo-release-bot"
           git config user.email "release-bot@monadeo.com"

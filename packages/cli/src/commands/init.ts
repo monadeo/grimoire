@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { SourcePin } from "@monadeo/grimoire-core";
+import type { SourcePin } from "@monadeo.com/grimoire-core";
 
 function parseJsonFile<T>(path: string): T {
   try {

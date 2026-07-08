@@ -10,7 +10,7 @@ backend is closed; the clients contain no secrets and no logic beyond presenting
 ## Install
 
 ```sh
-npm install -g @monadeo/grimoire-cli     # or: brew install monadeo/tap/grimoire
+npm install -g @monadeo.com/grimoire-cli     # or: brew install monadeo/tap/grimoire
 grimoire login
 grimoire setup claude-code               # wire the MCP server into your agent
 ```
@@ -19,9 +19,9 @@ grimoire setup claude-code               # wire the MCP server into your agent
 
 | Package | What |
 |---|---|
-| `@monadeo/grimoire-core` | Typed API client, auth broker login, config (`.grimoire.json`) |
-| `@monadeo/grimoire-cli` | `grimoire` command — search, sources, ingest, setup, init |
-| `@monadeo/grimoire-mcp` | MCP server (`npx @monadeo/grimoire-mcp`), stdio + streamable HTTP |
+| `@monadeo.com/grimoire-core` | Typed API client, auth broker login, config (`.grimoire.json`) |
+| `@monadeo.com/grimoire-cli` | `grimoire` command — search, sources, ingest, setup, init |
+| `@monadeo.com/grimoire-mcp` | MCP server (`npx @monadeo.com/grimoire-mcp`), stdio + streamable HTTP |
 
 ## MCP tools
 

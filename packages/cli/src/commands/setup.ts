@@ -3,12 +3,12 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
 // One-command agent onboarding (SDD decision 19 / clients spec): writes the MCP
-// registration for the named agent. `npx @monadeo/grimoire-mcp` needs no global install.
-const MCP_ENTRY = { command: "npx", args: ["-y", "@monadeo/grimoire-mcp"] };
+// registration for the named agent. `npx @monadeo.com/grimoire-mcp` needs no global install.
+const MCP_ENTRY = { command: "npx", args: ["-y", "@monadeo.com/grimoire-mcp"] };
 
 const CODEX_TABLE = `[mcp_servers.grimoire]
 command = "npx"
-args = ["-y", "@monadeo/grimoire-mcp"]
+args = ["-y", "@monadeo.com/grimoire-mcp"]
 `;
 
 // Codex reads ~/.codex/config.toml. Replace our table in place (up to the next

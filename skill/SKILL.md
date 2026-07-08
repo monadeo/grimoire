@@ -32,5 +32,5 @@ grimoire report <chunk_id> --verdict outdated   # docs contradicted observed beh
 ## Setup (once)
 
 ```
-npx @monadeo/grimoire-cli login
+npx @monadeo.com/grimoire-cli login
 ```

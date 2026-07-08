@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import express from "express";
-import { ApiError } from "@monadeo/grimoire-core";
+import { ApiError } from "@monadeo.com/grimoire-core";
 import { TOOLS, rewriteArgs } from "./tools.js";
 
 function buildServer(): McpServer {

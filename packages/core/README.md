@@ -1,11 +1,11 @@
-# @monadeo/grimoire-core
+# @monadeo.com/grimoire-core
 
 Typed API client, browser login, and config resolution for
 [Grimoire](https://grimoire.monadeo.com), the documentation-retrieval service for AI
-coding agents. Used by `@monadeo/grimoire-cli` and `@monadeo/grimoire-mcp`.
+coding agents. Used by `@monadeo.com/grimoire-cli` and `@monadeo.com/grimoire-mcp`.
 
 ```ts
-import { GrimoireClient } from "@monadeo/grimoire-core";
+import { GrimoireClient } from "@monadeo.com/grimoire-core";
 
 const client = new GrimoireClient();
 const res = await client.search({ query: "revalidateTag", sources: [{ source: "nextjs" }] });

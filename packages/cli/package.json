@@ -1,5 +1,5 @@
 {
-  "name": "@monadeo/grimoire-cli",
+  "name": "@monadeo.com/grimoire-cli",
   "version": "0.1.0",
   "type": "module",
   "license": "Apache-2.0",
@@ -19,7 +19,7 @@
     "@napi-rs/keyring": "^1.3.0"
   },
   "devDependencies": {
-    "@monadeo/grimoire-core": "workspace:*",
+    "@monadeo.com/grimoire-core": "workspace:*",
     "@types/node": "^26.1.0",
     "esbuild": "^0.28.1"
   },
