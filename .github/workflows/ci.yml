@@ -19,22 +19,20 @@ jobs:
       - run: pnpm build
       - run: pnpm check
 
-  schema-drift:
+  types-in-sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-      # The vendored OpenAPI spec must match what the service publishes, so the
-      # generated client never drifts from the real contract. Fails closed: a
-      # broken fetch is a red build, never a silent skip.
-      - name: Fetch published spec and diff
-        env:
-          SERVICE_SPEC_TOKEN: ${{ secrets.SERVICE_SPEC_TOKEN }}
-        run: |
-          if ! curl -sf \
-              -H "Authorization: token ${SERVICE_SPEC_TOKEN}" \
-              "https://raw.githubusercontent.com/monadeo/grimoire-service/main/openapi/openapi.yaml" \
-              -o /tmp/published.yaml; then
-            echo "::error::Could not fetch the service OpenAPI spec (check SERVICE_SPEC_TOKEN)."
-            exit 1
-          fi
-          diff -u openapi/openapi.yaml /tmp/published.yaml || { echo "::error::Vendored OpenAPI spec drifted from the service. Re-vendor and regenerate."; exit 1; }
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The committed generated types must match the vendored spec — catches "spec
+      # updated, forgot to regenerate". No cross-repo token: the service spec is
+      # re-vendored into openapi/ as a documented release step, and this guards the
+      # generate step against it. Fails closed on any drift.
+      - run: pnpm gen:types
+      - name: Ensure generated types are up to date with the vendored spec
+        run: git diff --exit-code -- packages/core/src/generated || { echo "::error::Run pnpm gen:types and commit packages/core/src/generated."; exit 1; }

@@ -23,14 +23,23 @@ jobs:
       - run: pnpm build
       - run: pnpm check
 
-      # Signed npm publish with provenance attestations, reproducible from tag.
-      - name: Publish packages
+      # Tokenless publish via npm Trusted Publishing (OIDC): no NPM_TOKEN — the
+      # id-token above is exchanged for a short-lived credential against the
+      # trusted-publisher configured on npmjs.com for each package. Provenance is
+      # attached automatically. We `pnpm pack` first (pnpm rewrites the
+      # `workspace:*` protocol into real versions in the tarball), then `npm
+      # publish` the tarball, because only the npm CLI performs the OIDC exchange.
+      - name: Publish packages (trusted publishing)
         run: |
+          mkdir -p /tmp/tarballs
           for pkg in core cli mcp; do
-            pnpm --filter "@monadeo/grimoire-$pkg" publish --access public --no-git-checks --provenance
+            pnpm --filter "@monadeo/grimoire-$pkg" pack --pack-destination /tmp/tarballs
           done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          for tgz in /tmp/tarballs/monadeo-grimoire-core-*.tgz \
+                     /tmp/tarballs/monadeo-grimoire-cli-*.tgz \
+                     /tmp/tarballs/monadeo-grimoire-mcp-*.tgz; do
+            npm publish "$tgz" --provenance --access public
+          done
 
   formula-bump:
     runs-on: ubuntu-latest
