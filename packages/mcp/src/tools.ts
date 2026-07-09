@@ -1,38 +1,6 @@
 import { z } from "zod";
 import { GrimoireClient, resolveDefaultSources, loadGlobalConfig } from "@monadeo.com/grimoire-core";
 
-// Hallucinated-argument rewriting before schema validation — cheap, model-agnostic
-// robustness (learned from the incumbent). Maps common LLM variants to our names.
-const ARG_ALIASES: Record<string, string> = {
-  question: "query",
-  userQuery: "query",
-  q: "query",
-  chunkId: "chunk_id",
-  chunkID: "chunk_id",
-  documentId: "chunk_id",
-  sourceId: "source",
-  library: "source",
-};
-
-// A key that the current tool declares is never an alias (list_sources takes `q`
-// literally), and an alias only fills its target when the target is absent.
-export function rewriteArgs(
-  args: Record<string, unknown>,
-  schemaKeys: readonly string[],
-): Record<string, unknown> {
-  const declared = new Set(schemaKeys);
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(args)) {
-    if (declared.has(k) || !(k in ARG_ALIASES)) out[k] = v;
-  }
-  for (const [k, v] of Object.entries(args)) {
-    if (declared.has(k)) continue;
-    const target = ARG_ALIASES[k];
-    if (target !== undefined) out[target] ??= v;
-  }
-  return out;
-}
-
 const client = new GrimoireClient();
 
 function sourcesFromArg(arg: unknown): { source: string; version?: string }[] {

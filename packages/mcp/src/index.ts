@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import express from "express";
 import { ApiError } from "@monadeo.com/grimoire-core";
-import { TOOLS, rewriteArgs } from "./tools.js";
+import { TOOLS } from "./tools.js";
 
 function buildServer(): McpServer {
   const server = new McpServer(
@@ -20,7 +20,7 @@ function buildServer(): McpServer {
       { description: tool.description, inputSchema: tool.schema },
       async (rawArgs: Record<string, unknown>) => {
         try {
-          const text = await tool.handler(rewriteArgs(rawArgs, Object.keys(tool.schema)));
+          const text = await tool.handler(rawArgs);
           return { content: [{ type: "text" as const, text }] };
         } catch (err) {
           const message =
