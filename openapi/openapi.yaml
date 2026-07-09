@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Grimoire API
   description: Documentation retrieval service for AI agents, by Monadeo.
-  version: 0.5.6
+  version: 0.6.0
 servers:
   - url: https://grimoire-api.monadeo.com
     description: Production
@@ -591,6 +591,20 @@ paths:
           required: true
           schema: { type: string, pattern: "^[A-Za-z0-9_-]{43}$" }
           description: PKCE S256 challenge
+        - name: code_challenge_method
+          in: query
+          required: false
+          schema: { type: string, enum: [S256] }
+        - name: state
+          in: query
+          required: false
+          schema: { type: string }
+          description: Opaque CSRF token the sign-in page echoes to the loopback callback
+        - name: redirect_uri
+          in: query
+          required: false
+          schema: { type: string, format: uri }
+          description: CLI loopback callback (http://127.0.0.1:<port>/callback)
       responses:
         "200":
           description: Hosted sign-in page (HTML)
@@ -651,6 +665,37 @@ paths:
                 type: object
                 properties:
                   error: { type: string, const: authorization_pending }
+  /auth/cli/refresh:
+    post:
+      operationId: cliAuthRefresh
+      summary: Exchange the stored refresh token for a short-lived ID token
+      description:
+        Silent-refresh endpoint the clients call before every authenticated
+        request when the cached ID token expired. Ships with the Phase 6 auth
+        work (the client contract is fixed here first — contract-first rule).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200":
+          description: Fresh ID token
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id_token, expires_in]
+                properties:
+                  id_token: { type: string }
+                  expires_in: { type: integer, description: Seconds until expiry }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
 components:
   securitySchemes:
     bearerAuth:

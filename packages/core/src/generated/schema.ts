@@ -538,6 +538,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/cli/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchange the stored refresh token for a short-lived ID token
+         * @description Silent-refresh endpoint the clients call before every authenticated request when the cached ID token expired. Ships with the Phase 6 auth work (the client contract is fixed here first — contract-first rule).
+         */
+        post: operations["cliAuthRefresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1481,6 +1501,11 @@ export interface operations {
             query: {
                 /** @description PKCE S256 challenge */
                 code_challenge: string;
+                code_challenge_method?: "S256";
+                /** @description Opaque CSRF token the sign-in page echoes to the loopback callback */
+                state?: string;
+                /** @description CLI loopback callback (http://127.0.0.1:<port>/callback) */
+                redirect_uri?: string;
             };
             header?: never;
             path?: never;
@@ -1562,6 +1587,38 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    cliAuthRefresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    refresh_token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Fresh ID token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id_token: string;
+                        /** @description Seconds until expiry */
+                        expires_in: number;
+                    };
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
         };
     };
 }

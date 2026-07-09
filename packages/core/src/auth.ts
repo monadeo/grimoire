@@ -87,6 +87,9 @@ export async function browserLogin(apiBase: string, openBrowser: (url: string) =
     body: JSON.stringify({ code, code_verifier: verifier }),
   });
   if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
-  const { refresh_token } = (await res.json()) as { refresh_token: string };
+  const { refresh_token } = (await res.json()) as { refresh_token?: unknown };
+  if (typeof refresh_token !== "string" || refresh_token.length === 0) {
+    throw new Error("Token exchange succeeded but returned no refresh token");
+  }
   storeRefreshToken(refresh_token);
 }

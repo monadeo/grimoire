@@ -9,7 +9,7 @@ import {
   loadGlobalConfig,
   type SourcePin,
 } from "@monadeo.com/grimoire-core";
-import { parseArgs, UsageError } from "./args.js";
+import { parseArgs, requirePositional, requireFlagOneOf, intFlag, UsageError } from "./args.js";
 import { printResults, printCompact, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
@@ -39,7 +39,7 @@ const HELP = `grimoire — documentation retrieval for AI agents
   grimoire sources [--q <kw>] [--json]
   grimoire versions <source> [--json]
   grimoire doc <chunk_id> [--window 2]
-  grimoire report <chunk_id> --verdict incorrect|outdated|helpful [--note "..."]
+  grimoire report <chunk_id> --verdict helpful|incorrect|outdated [--note "..."]
   grimoire ingest <url> [--version 15.2] [--private] [--webhook URL] [--watch]
   grimoire jobs <job_id> [--watch]
   grimoire mcp [--http]
@@ -115,10 +115,10 @@ async function main(argv: string[]): Promise<number> {
           query,
           sources,
           language: args.flags.lang?.[0],
-          top_k: args.flags["top-k"] ? Number(args.flags["top-k"][0]) : undefined,
+          top_k: intFlag(args, "top-k"),
         });
         if (json) process.stdout.write(JSON.stringify(res, null, 2) + "\n");
-        else if (args.bools.has("compact")) printCompact(res.results);
+        else if (args.bools.has("compact")) printCompact(res.results, res.confidence);
         else printResults(res.results, res.confidence);
         return EXIT.ok;
       }
@@ -128,23 +128,34 @@ async function main(argv: string[]): Promise<number> {
         return EXIT.ok;
       }
       case "versions": {
-        const res = await client.listVersions(args.positionals[0]);
+        const source = requirePositional(args, 0, "Usage: grimoire versions <source> [--json]");
+        const res = await client.listVersions(source);
         process.stdout.write(JSON.stringify(res.versions ?? [], null, json ? 2 : 0) + "\n");
         return EXIT.ok;
       }
       case "doc": {
-        const res = await client.getContext(args.positionals[0], Number(args.flags.window?.[0] ?? 2));
+        const chunkId = requirePositional(args, 0, "Usage: grimoire doc <chunk_id> [--window 2]");
+        const window = intFlag(args, "window", { min: 0, max: 5 }) ?? 2;
+        const res = await client.getContext(chunkId, window);
         process.stdout.write(JSON.stringify(res.chunks ?? [], null, 2) + "\n");
         return EXIT.ok;
       }
       case "report": {
-        await client.reportResult(args.positionals[0], args.flags.verdict?.[0] ?? "incorrect", args.flags.note?.[0]);
+        const usage = 'Usage: grimoire report <chunk_id> --verdict helpful|incorrect|outdated [--note "..."]';
+        const chunkId = requirePositional(args, 0, usage);
+        const verdict = requireFlagOneOf(args, "verdict", ["helpful", "incorrect", "outdated"], usage);
+        await client.reportResult(chunkId, verdict, args.flags.note?.[0]);
         process.stdout.write("Reported.\n");
         return EXIT.ok;
       }
       case "ingest": {
+        const url = requirePositional(
+          args,
+          0,
+          "Usage: grimoire ingest <url> [--version 15.2] [--private] [--webhook URL] [--watch]",
+        );
         const res = await client.submitSource({
-          url: args.positionals[0],
+          url,
           version: args.flags.version?.[0],
           visibility: args.bools.has("private") ? "private" : "public",
           webhook_url: args.flags.webhook?.[0],
@@ -153,8 +164,10 @@ async function main(argv: string[]): Promise<number> {
         if (args.bools.has("watch")) return watchJob(client, res.job_id);
         return EXIT.ok;
       }
-      case "jobs":
-        return args.bools.has("watch") ? watchJob(client, args.positionals[0]) : printJob(client, args.positionals[0]);
+      case "jobs": {
+        const jobId = requirePositional(args, 0, "Usage: grimoire jobs <job_id> [--watch]");
+        return args.bools.has("watch") ? watchJob(client, jobId) : printJob(client, jobId);
+      }
       default:
         process.stderr.write(`Unknown command: ${command}\n${HELP}`);
         return EXIT.apiError;

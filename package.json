@@ -12,7 +12,7 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r --workspace-concurrency=1 test",
-    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "check": "pnpm --filter @monadeo.com/grimoire-core build && pnpm typecheck && pnpm lint && pnpm test",
     "gen:types": "openapi-typescript openapi/openapi.yaml -o packages/core/src/generated/schema.ts",
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",

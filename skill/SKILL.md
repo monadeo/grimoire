@@ -16,8 +16,8 @@ grimoire search "<one concept>" -s <source>[@version] [-s <another>] --compact
 - One concept per query; iterate with refined queries rather than raising results.
 - Omit `@version` for latest; pin it (`nextjs@15`) to match the project's stack.
 - In a repo with `.grimoire.json`, omit `-s` — the pinned sources are used.
-- If output says **CONFIDENCE: WEAK**, the docs likely don't cover it — tell the user rather than guessing.
-- Cite the `Source:` URL on every chunk in your answer.
+- If stderr says `note: low-confidence results`, the docs likely don't cover it — tell the user rather than guessing.
+- Every result line includes the chunk's URL — cite it in your answer.
 
 ## Examples
 

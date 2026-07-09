@@ -5,12 +5,14 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write
-  id-token: write # npm provenance
+  contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # npm provenance / trusted publishing
+      contents: read
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6

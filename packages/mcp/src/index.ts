@@ -55,8 +55,12 @@ function runHttp(port: number): void {
       enableDnsRebindingProtection: true,
       allowedHosts: ["127.0.0.1", `127.0.0.1:${port}`, "localhost", `localhost:${port}`],
     });
-    res.on("close", () => void transport.close());
-    await buildServer().connect(transport);
+    const server = buildServer();
+    res.on("close", () => {
+      void transport.close();
+      void server.close();
+    });
+    await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
   });
   app.get("/mcp", (_req, res) => res.status(405).end()); // no server-initiated SSE

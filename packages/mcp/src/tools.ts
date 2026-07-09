@@ -94,7 +94,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: "fetch_document",
     description: "Expand context around a search hit by chunk id (neighbors in the same section).",
-    schema: { chunk_id: z.string(), window: z.number().optional() },
+    schema: { chunk_id: z.string(), window: z.number().int().min(0).max(5).optional() },
     async handler(args) {
       const res = await client.getContext(String(args.chunk_id), (args.window as number) ?? 2);
       return JSON.stringify(res.chunks ?? [], null, 2);
