@@ -1504,8 +1504,8 @@ export interface operations {
                 code_challenge_method?: "S256";
                 /** @description Opaque CSRF token the sign-in page echoes to the loopback callback */
                 state?: string;
-                /** @description CLI loopback callback (http://127.0.0.1:<port>/callback) */
-                redirect_uri?: string;
+                /** @description CLI loopback callback — must match http://127.0.0.1:<port>/callback */
+                redirect_uri: string;
             };
             header?: never;
             path?: never;

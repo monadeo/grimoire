@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Grimoire API
   description: Documentation retrieval service for AI agents, by Monadeo.
-  version: 0.6.0
+  version: 0.6.6
 servers:
   - url: https://grimoire-api.monadeo.com
     description: Production
@@ -598,13 +598,13 @@ paths:
         - name: state
           in: query
           required: false
-          schema: { type: string }
+          schema: { type: string, pattern: "^[A-Za-z0-9_-]{1,128}$" }
           description: Opaque CSRF token the sign-in page echoes to the loopback callback
         - name: redirect_uri
           in: query
-          required: false
+          required: true
           schema: { type: string, format: uri }
-          description: CLI loopback callback (http://127.0.0.1:<port>/callback)
+          description: CLI loopback callback — must match http://127.0.0.1:<port>/callback
       responses:
         "200":
           description: Hosted sign-in page (HTML)
