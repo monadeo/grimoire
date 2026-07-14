@@ -60,8 +60,8 @@ function setupCodex(): number {
   return finish("codex", path);
 }
 
-// Best-effort session probe: a keychain that can't be read (no grant yet,
-// headless box) must fall through to the hint, never crash setup.
+// Best-effort session probe: an unreadable credentials file must fall through
+// to the hint, never crash setup.
 function hasSession(): boolean {
   if (process.env.GRIMOIRE_AUTH_TOKEN) return true;
   try {

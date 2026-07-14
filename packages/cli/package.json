@@ -15,9 +15,6 @@
     "lint": "eslint src",
     "test": "vitest run"
   },
-  "dependencies": {
-    "@napi-rs/keyring": "^1.3.0"
-  },
   "devDependencies": {
     "@monadeo.com/grimoire-core": "workspace:*",
     "@types/node": "^26.1.0",

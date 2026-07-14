@@ -57,11 +57,6 @@ async function main(argv: string[]): Promise<number> {
     case "login": {
       await browserLogin(loadGlobalConfig().apiBaseUrl, openBrowser);
       process.stdout.write("Logged in.\n");
-      if (process.platform === "darwin") {
-        process.stdout.write(
-          "note: macOS may ask to allow keychain access when a tool first uses this session — choose \"Always Allow\".\n",
-        );
-      }
       return EXIT.ok;
     }
     case "logout":

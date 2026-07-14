@@ -1,35 +1,43 @@
 import { createHash, randomBytes } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
-import { Entry } from "@napi-rs/keyring";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
 import { fetchWithTimeout } from "./http.js";
 
-// Credential storage in the OS keychain (maintained @napi-rs/keyring — keytar is
-// archived). A machine token via GRIMOIRE_AUTH_TOKEN overrides interactive auth (CI only).
-const SERVICE = "com.monadeo.grimoire";
-const ACCOUNT = "refresh_token";
-
-function keyring(): Entry {
-  return new Entry(SERVICE, ACCOUNT);
+// Session storage is a 0600 file, not the OS keychain (Astro 2026-07-14):
+// keychain ACLs are per binary, so every agent runtime spawning the MCP server
+// re-prompted the user — gcloud and Codex accept the same file-based model.
+// A machine token via GRIMOIRE_AUTH_TOKEN overrides interactive auth (CI only).
+function credentialsPath(): string {
+  return join(
+    process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"),
+    "grimoire",
+    "credentials.json",
+  );
 }
 
 export function storeRefreshToken(token: string): void {
-  keyring().setPassword(token);
+  const path = credentialsPath();
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
+  writeFileSync(path, JSON.stringify({ refresh_token: token }) + "\n", { mode: 0o600 });
 }
 
 export function readRefreshToken(): string | undefined {
   try {
-    return keyring().getPassword() ?? undefined;
+    const parsed = JSON.parse(readFileSync(credentialsPath(), "utf8")) as {
+      refresh_token?: unknown;
+    };
+    return typeof parsed.refresh_token === "string" && parsed.refresh_token !== ""
+      ? parsed.refresh_token
+      : undefined;
   } catch {
     return undefined;
   }
 }
 
 export function clearRefreshToken(): void {
-  try {
-    keyring().deletePassword();
-  } catch {
-    /* already gone */
-  }
+  if (existsSync(credentialsPath())) rmSync(credentialsPath());
 }
 
 function base64url(buf: Buffer): string {

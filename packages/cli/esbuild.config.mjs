@@ -11,6 +11,4 @@ await build({
   banner: {
     js: "#!/usr/bin/env node\nimport { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
   },
-  // Native keyring stays external — bundling a .node addon breaks it.
-  external: ["@napi-rs/keyring"],
 });
