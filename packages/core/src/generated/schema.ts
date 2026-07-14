@@ -761,6 +761,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Error"];
         };
     };
     submitSource: {

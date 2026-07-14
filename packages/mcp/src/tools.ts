@@ -36,9 +36,15 @@ export const TOOLS: ToolDef[] = [
       max_response_tokens: z.number().optional().describe("Cap response size to control context bloat"),
     },
     async handler(args) {
+      const sources = sourcesFromArg(args.sources);
+      // Guide the agent instead of surfacing the API's bare 400: this happens on
+      // every search outside a configured project until it learns the pattern.
+      if (sources.length === 0) {
+        return "No sources specified and this project has no defaults. Call list_sources to discover what is indexed, then retry with sources: [\"<source_id>\"].";
+      }
       const res = await client.search({
         query: String(args.query),
-        sources: sourcesFromArg(args.sources),
+        sources,
         language: args.language as string | undefined,
         max_response_tokens:
           (args.max_response_tokens as number | undefined) ?? loadGlobalConfig().maxResponseTokens,

@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Grimoire API
   description: Documentation retrieval service for AI agents, by Monadeo.
-  version: 0.6.6
+  version: 0.6.8
 servers:
   - url: https://grimoire-api.monadeo.com
     description: Production
@@ -107,6 +107,7 @@ paths:
                   sources:
                     type: array
                     items: { $ref: "#/components/schemas/SourceCard" }
+        "401": { $ref: "#/components/responses/Error" }
     post:
       operationId: submitSource
       summary: Submit a documentation source for ingestion
