@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { readRefreshToken } from "@monadeo.com/grimoire-core";
 
 // One-command agent onboarding (SDD decision 19 / clients spec): writes the MCP
 // registration for the named agent. `npx @monadeo.com/grimoire-mcp` needs no global install.
@@ -59,9 +60,20 @@ function setupCodex(): number {
   return finish("codex", path);
 }
 
+// Best-effort session probe: a keychain that can't be read (no grant yet,
+// headless box) must fall through to the hint, never crash setup.
+function hasSession(): boolean {
+  if (process.env.GRIMOIRE_AUTH_TOKEN) return true;
+  try {
+    return readRefreshToken() !== undefined;
+  } catch {
+    return false;
+  }
+}
+
 function finish(agent: string, path: string): number {
   process.stdout.write(`Configured grimoire MCP for ${agent} at ${path}\n`);
-  process.stdout.write("Run `grimoire login` if you haven't yet.\n");
+  process.stdout.write(hasSession() ? "Already logged in.\n" : "Run `grimoire login` to authenticate.\n");
   return 0;
 }
 
