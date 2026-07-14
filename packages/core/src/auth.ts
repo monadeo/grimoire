@@ -62,8 +62,8 @@ export async function browserLogin(apiBase: string, openBrowser: (url: string) =
         res.writeHead(404).end();
         return;
       }
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end("<p>Login complete — return to your terminal.</p>");
+      // Land the user on the hosted branded page rather than raw loopback text.
+      res.writeHead(302, { Location: `${broker}/auth/cli/success` }).end();
       clearTimeout(timer);
       server.close();
       resolve(received);
