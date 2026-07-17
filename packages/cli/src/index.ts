@@ -30,19 +30,26 @@ function parseSourceFlags(values: string[] | undefined): SourcePin[] {
   });
 }
 
-const HELP = `grimoire — documentation retrieval for AI agents
+// Injected by esbuild from package.json at build time ("dev" when running
+// unbundled source, e.g. under vitest).
+declare const __GRIMOIRE_VERSION__: string | undefined;
+const VERSION = typeof __GRIMOIRE_VERSION__ === "string" ? __GRIMOIRE_VERSION__ : "dev";
+
+const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
 
   grimoire login | logout | whoami
   grimoire setup <claude-code|cursor|windsurf|codex>
   grimoire init
   grimoire search "<query>" [-s nextjs@15 -s react] [--lang en] [--top-k 8] [--json|--compact]
-  grimoire sources [--q <kw>] [--json]
+  grimoire sources [--q <kw>] [--names|--json]
   grimoire versions <source> [--json]
   grimoire doc <chunk_id> [--window 2]
   grimoire report <chunk_id> --verdict helpful|incorrect|outdated [--note "..."]
   grimoire ingest <url> [--version 15.2] [--private] [--webhook URL] [--watch]
   grimoire jobs <job_id> [--watch]
   grimoire mcp [--http]
+  grimoire help | --help | -h
+  grimoire version | --version | -v
 
   env: GRIMOIRE_AUTH_TOKEN — machine token (CI, instead of login)
        GRIMOIRE_API_URL   — API origin without a path, e.g. https://grimoire-api-qa.monadeo.com
@@ -54,6 +61,11 @@ async function main(argv: string[]): Promise<number> {
   const json = args.bools.has("json");
 
   switch (command) {
+    case "version":
+    case "--version":
+    case "-v":
+      process.stdout.write(`${VERSION}\n`);
+      return EXIT.ok;
     case "login": {
       await browserLogin(loadGlobalConfig().apiBaseUrl, openBrowser);
       process.stdout.write("Logged in.\n");
@@ -73,6 +85,7 @@ async function main(argv: string[]): Promise<number> {
     case undefined:
     case "help":
     case "--help":
+    case "-h":
       process.stdout.write(HELP);
       return EXIT.ok;
   }
@@ -124,7 +137,18 @@ async function main(argv: string[]): Promise<number> {
       }
       case "sources": {
         const res = await client.listSources(args.flags.q?.[0]);
-        process.stdout.write(JSON.stringify(res.sources ?? [], null, json ? 2 : 0) + "\n");
+        const sources = res.sources ?? [];
+        if (json) {
+          process.stdout.write(JSON.stringify(sources, null, 2) + "\n");
+        } else if (args.bools.has("names")) {
+          for (const s of sources) process.stdout.write(`${s.source_id}\n`);
+        } else {
+          for (const s of sources) {
+            const latest = s.latest_version ?? "-";
+            const vis = s.visibility === "private" ? " (private)" : "";
+            process.stdout.write(`${s.source_id}@${latest}${vis}  ${s.origin_url ?? ""}\n`);
+          }
+        }
         return EXIT.ok;
       }
       case "versions": {

@@ -1,6 +1,10 @@
+import { readFileSync } from "node:fs";
 import { build } from "esbuild";
 
+const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+
 await build({
+  define: { __GRIMOIRE_VERSION__: JSON.stringify(pkg.version) },
   entryPoints: ["src/index.ts"],
   bundle: true,
   platform: "node",
