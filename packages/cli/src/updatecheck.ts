@@ -40,9 +40,7 @@ export function notifyIfOutdated(current: string): void {
   if (current === "dev" || !process.stderr.isTTY) return;
   const { latest } = readState();
   if (latest && newerVersion(latest, current)) {
-    process.stderr.write(
-      `grimoire ${latest} is available (you have ${current}) — npm i -g @monadeo.com/grimoire-cli or brew upgrade monadeo/tap/grimoire\n`,
-    );
+    process.stderr.write(`grimoire ${latest} is available (you have ${current}) — run \`grimoire update\`\n`);
   }
 }
 

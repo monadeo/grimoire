@@ -14,6 +14,7 @@ import { printResults, printCompact, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
 import { runConfig } from "./commands/config.js";
+import { runUpdate } from "./commands/update.js";
 import { notifyIfOutdated, refreshUpdateState } from "./updatecheck.js";
 
 function openBrowser(url: string): void {
@@ -46,6 +47,7 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
   grimoire sources [--q <kw>] [--names|--json]
   grimoire versions <source> [--json]
   grimoire config [<key>] [<value>] [--unset]
+  grimoire update
   grimoire doc <chunk_id> [--window 2]
   grimoire report <chunk_id> --verdict helpful|incorrect|outdated [--note "..."]
   grimoire ingest <url> [--version 15.2] [--private] [--webhook URL] [--watch]
@@ -67,6 +69,7 @@ const COMMAND_FLAGS: Record<string, readonly string[]> = {
   help: [], "--help": [], "-h": [],
   mcp: ["http"],
   config: ["unset"],
+  update: [],
   search: ["source", "lang", "top-k", "json", "compact"],
   sources: ["q", "names", "json"],
   versions: ["json"],
@@ -102,6 +105,8 @@ async function main(argv: string[]): Promise<number> {
       return runInit();
     case "config":
       return runConfig(args);
+    case "update":
+      return runUpdate();
     case "mcp":
       process.stderr.write("Run the MCP server with: npx @monadeo.com/grimoire-mcp" + (args.bools.has("http") ? " --http\n" : "\n"));
       return EXIT.ok;
