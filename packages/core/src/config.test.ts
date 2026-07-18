@@ -39,6 +39,21 @@ describe("loadGlobalConfig", () => {
     expect(loadGlobalConfig().apiBaseUrl).toBe("https://grimoire-api-qa.monadeo.com/v1");
   });
 
+  it("env override beats a persisted api url (env > file > default)", () => {
+    const cfg = mkdtempSync(join(tmpdir(), "grimcfg-"));
+    dirs.push(cfg);
+    process.env.XDG_CONFIG_HOME = cfg;
+    mkdirSync(join(cfg, "grimoire"), { recursive: true });
+    writeFileSync(
+      join(cfg, "grimoire", "config.json"),
+      JSON.stringify({ apiBaseUrl: "https://from-file.example", updateCheckHours: 12 }),
+    );
+    expect(loadGlobalConfig().apiBaseUrl).toBe("https://from-file.example");
+    expect(loadGlobalConfig().updateCheckHours).toBe(12);
+    process.env.GRIMOIRE_API_URL = "https://from-env.example";
+    expect(loadGlobalConfig().apiBaseUrl).toBe("https://from-env.example");
+  });
+
   it("treats a malformed global config as absent and warns on stderr", () => {
     const cfg = mkdtempSync(join(tmpdir(), "grimcfg-"));
     dirs.push(cfg);

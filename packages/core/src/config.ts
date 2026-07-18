@@ -12,6 +12,7 @@ export interface GlobalConfig {
   defaultSources?: SourcePin[];
   defaultLanguage?: string;
   maxResponseTokens?: number;
+  updateCheckHours?: number;
 }
 
 export interface ProjectConfig {
@@ -23,7 +24,7 @@ export interface ProjectConfig {
 // never carry a path prefix or auth-broker URLs would be built wrong.
 export const DEFAULT_API_BASE = "https://grimoire-api.monadeo.com";
 
-function globalConfigPath(): string {
+export function globalConfigPath(): string {
   return join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "grimoire", "config.json");
 }
 
@@ -40,18 +41,37 @@ function readJsonConfig<T>(path: string): T | undefined {
   }
 }
 
+// Precedence: env var > config file > default — a per-invocation env override
+// (CI, QA testing) must always beat persisted settings.
 export function loadGlobalConfig(): GlobalConfig {
   const path = globalConfigPath();
-  const base: GlobalConfig = { apiBaseUrl: process.env.GRIMOIRE_API_URL ?? DEFAULT_API_BASE };
-  if (!existsSync(path)) return base;
-  const overrides = readJsonConfig<Partial<GlobalConfig>>(path);
-  return overrides ? { ...base, ...overrides } : base;
+  const overrides = existsSync(path) ? readJsonConfig<Partial<GlobalConfig>>(path) : undefined;
+  return {
+    apiBaseUrl: DEFAULT_API_BASE,
+    ...overrides,
+    ...(process.env.GRIMOIRE_API_URL ? { apiBaseUrl: process.env.GRIMOIRE_API_URL } : {}),
+  };
 }
 
 export function saveGlobalConfig(config: GlobalConfig): void {
   const path = globalConfigPath();
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(config, null, 2));
+}
+
+// Read-modify-write against the FILE only (never the env-merged view, which
+// would bake a transient GRIMOIRE_API_URL into the file). `undefined` values
+// remove their key.
+export function updateGlobalConfigFile(patch: Partial<GlobalConfig>): Partial<GlobalConfig> {
+  const path = globalConfigPath();
+  const current = existsSync(path) ? (readJsonConfig<Partial<GlobalConfig>>(path) ?? {}) : {};
+  const merged: Record<string, unknown> = { ...current, ...patch };
+  for (const [key, value] of Object.entries(merged)) {
+    if (value === undefined) delete merged[key];
+  }
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(merged, null, 2));
+  return merged as Partial<GlobalConfig>;
 }
 
 // Project config (.grimoire.json in the repo root) pins a codebase's sources and

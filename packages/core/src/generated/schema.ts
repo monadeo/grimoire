@@ -590,6 +590,9 @@ export interface components {
             latest_version?: string | null;
             /** @description Precise product version of the latest snapshot (e.g. 16.2.10), when known */
             latest_semver?: string | null;
+            latest_pages?: number | null;
+            latest_chunks?: number | null;
+            latest_crawled_at?: string | null;
             languages?: string[];
             origin_url?: string | null;
         };

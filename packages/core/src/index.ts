@@ -1,6 +1,8 @@
 export {
   loadGlobalConfig,
   saveGlobalConfig,
+  updateGlobalConfigFile,
+  globalConfigPath,
   findProjectConfig,
   resolveDefaultSources,
   DEFAULT_API_BASE,

@@ -13,6 +13,8 @@ import { parseArgs, requirePositional, requireFlagOneOf, intFlag, UsageError } f
 import { printResults, printCompact, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
+import { runConfig } from "./commands/config.js";
+import { notifyIfOutdated, refreshUpdateState } from "./updatecheck.js";
 
 function openBrowser(url: string): void {
   const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
@@ -43,6 +45,7 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
   grimoire search "<query>" [-s nextjs@15 -s react] [--lang en] [--top-k 8] [--json|--compact]
   grimoire sources [--q <kw>] [--names|--json]
   grimoire versions <source> [--json]
+  grimoire config [<key>] [<value>] [--unset]
   grimoire doc <chunk_id> [--window 2]
   grimoire report <chunk_id> --verdict helpful|incorrect|outdated [--note "..."]
   grimoire ingest <url> [--version 15.2] [--private] [--webhook URL] [--watch]
@@ -63,6 +66,7 @@ const COMMAND_FLAGS: Record<string, readonly string[]> = {
   login: [], logout: [], setup: [], init: [], whoami: [],
   help: [], "--help": [], "-h": [],
   mcp: ["http"],
+  config: ["unset"],
   search: ["source", "lang", "top-k", "json", "compact"],
   sources: ["q", "names", "json"],
   versions: ["json"],
@@ -96,6 +100,8 @@ async function main(argv: string[]): Promise<number> {
       return runSetup(args.positionals[0]);
     case "init":
       return runInit();
+    case "config":
+      return runConfig(args);
     case "mcp":
       process.stderr.write("Run the MCP server with: npx @monadeo.com/grimoire-mcp" + (args.bools.has("http") ? " --http\n" : "\n"));
       return EXIT.ok;
@@ -165,7 +171,16 @@ async function main(argv: string[]): Promise<number> {
             // crawl-date ids are the fallback when no version is known.
             const latest = s.latest_semver ?? s.latest_version ?? "-";
             const vis = s.visibility === "private" ? " (private)" : "";
-            process.stdout.write(`${s.source_id}@${latest}${vis}  ${s.origin_url ?? ""}\n`);
+            const meta = [
+              s.latest_chunks != null ? `${s.latest_chunks} chunks` : "",
+              s.latest_pages != null ? `${s.latest_pages} pages` : "",
+              s.latest_crawled_at ? `crawled ${s.latest_crawled_at.slice(0, 10)}` : "",
+            ]
+              .filter(Boolean)
+              .join(" · ");
+            process.stdout.write(
+              [`${s.source_id}@${latest}${vis}`, meta, s.origin_url ?? ""].filter(Boolean).join("  ") + "\n",
+            );
           }
         }
         return EXIT.ok;
@@ -237,7 +252,16 @@ async function main(argv: string[]): Promise<number> {
     }
   } catch (err) {
     if (err instanceof ApiError) {
-      process.stderr.write(`error: ${err.code}\n`);
+      // The API explains itself (message, available versions, suggestions) —
+      // swallowing that detail leaves agents retrying blind.
+      const body = (typeof err.body === "object" && err.body !== null ? err.body : {}) as {
+        message?: string;
+        available?: string[];
+        did_you_mean?: string[];
+      };
+      process.stderr.write(`error: ${err.code}${body.message ? ` — ${body.message}` : ""}\n`);
+      if (body.available?.length) process.stderr.write(`available: ${body.available.join(", ")}\n`);
+      if (body.did_you_mean?.length) process.stderr.write(`did you mean: ${body.did_you_mean.join(", ")}\n`);
       if (err.status === 401) return EXIT.authRequired;
       if (err.status === 429) return EXIT.quota;
       if (err.status === 404) return EXIT.notFound;
@@ -294,8 +318,12 @@ async function watchJob(client: GrimoireClient, jobId: string): Promise<number> 
   return EXIT.apiError;
 }
 
+notifyIfOutdated(VERSION);
 main(process.argv.slice(2))
-  .then((code) => process.exit(code))
+  .then(async (code) => {
+    await refreshUpdateState(VERSION, loadGlobalConfig().updateCheckHours);
+    process.exit(code);
+  })
   .catch((err) => {
     if (err instanceof UsageError) {
       process.stderr.write(`${err.message}\n`);

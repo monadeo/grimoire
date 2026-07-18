@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Grimoire API
   description: Documentation retrieval service for AI agents, by Monadeo.
-  version: 0.6.23
+  version: 0.6.25
 servers:
   - url: https://grimoire-api.monadeo.com
     description: Production
@@ -792,6 +792,9 @@ components:
         latest_semver:
           type: [string, "null"]
           description: Precise product version of the latest snapshot (e.g. 16.2.10), when known
+        latest_pages: { type: [integer, "null"] }
+        latest_chunks: { type: [integer, "null"] }
+        latest_crawled_at: { type: [string, "null"] }
         languages: { type: array, items: { type: string } }
         origin_url: { type: [string, "null"] }
     Chunk:
