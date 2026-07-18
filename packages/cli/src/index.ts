@@ -161,7 +161,9 @@ async function main(argv: string[]): Promise<number> {
           for (const s of sources) process.stdout.write(`${s.source_id}\n`);
         } else {
           for (const s of sources) {
-            const latest = s.latest_version ?? "-";
+            // The precise product version is the identity users care about;
+            // crawl-date ids are the fallback when no version is known.
+            const latest = s.latest_semver ?? s.latest_version ?? "-";
             const vis = s.visibility === "private" ? " (private)" : "";
             process.stdout.write(`${s.source_id}@${latest}${vis}  ${s.origin_url ?? ""}\n`);
           }
@@ -171,7 +173,27 @@ async function main(argv: string[]): Promise<number> {
       case "versions": {
         const source = requirePositional(args, 0, "Usage: grimoire versions <source> [--json]");
         const res = await client.listVersions(source);
-        process.stdout.write(JSON.stringify(res.versions ?? [], null, json ? 2 : 0) + "\n");
+        const versions = res.versions ?? [];
+        if (json) {
+          process.stdout.write(JSON.stringify(versions, null, 2) + "\n");
+          return EXIT.ok;
+        }
+        const available = versions.filter((v) => v.status === "active");
+        if (available.length === 0) {
+          process.stdout.write(`no active versions for ${source}\n`);
+          return EXIT.ok;
+        }
+        for (const v of available) {
+          const label = v.semver ?? v.version_id;
+          const parts = [
+            label,
+            v.is_latest ? "latest" : "",
+            `${v.chunk_count ?? 0} chunks`,
+            `crawled ${(v.ingested_at ?? "").slice(0, 10)}`,
+            v.semver ? `(${v.version_id})` : "",
+          ].filter(Boolean);
+          process.stdout.write(parts.join("  ") + "\n");
+        }
         return EXIT.ok;
       }
       case "doc": {

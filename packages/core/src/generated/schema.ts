@@ -436,6 +436,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/users/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Idempotently create the caller's user record and implicit free tenant
+         * @description First-login step (data-model rule "one tenant per user", server-side writes only). Safe to call on every sign-in; returns the existing tenant afterwards.
+         */
+        post: operations["bootstrapUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/billing/checkout": {
         parameters: {
             query?: never;
@@ -445,7 +465,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Stripe checkout (Phase 6 — currently 501) */
+        /** Start a Team subscription (Stripe Checkout session; owner only) */
         post: operations["createCheckout"];
         delete?: never;
         options?: never;
@@ -462,7 +482,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Stripe portal (Phase 6 — currently 501) */
+        /** Open the Stripe customer portal (owner only) */
         post: operations["createBillingPortal"];
         delete?: never;
         options?: never;
@@ -479,7 +499,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Stripe events (HMAC-verified; Phase 6 — currently 501) */
+        /** Stripe events (signature-verified with the webhook secret; not a client API) */
         post: operations["stripeWebhook"];
         delete?: never;
         options?: never;
@@ -568,6 +588,8 @@ export interface components {
             /** @enum {string} */
             visibility?: "public" | "private";
             latest_version?: string | null;
+            /** @description Precise product version of the latest snapshot (e.g. 16.2.10), when known */
+            latest_semver?: string | null;
             languages?: string[];
             origin_url?: string | null;
         };
@@ -698,7 +720,7 @@ export interface operations {
                     language?: string;
                     /** @default 8 */
                     top_k?: number;
-                    /** @default 50 */
+                    /** @default 100 */
                     candidates_per_source?: number;
                     max_response_tokens?: number;
                     /**
@@ -1461,7 +1483,7 @@ export interface operations {
             410: components["responses"]["Error"];
         };
     };
-    createCheckout: {
+    bootstrapUser: {
         parameters: {
             query?: never;
             header?: never;
@@ -1470,7 +1492,61 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            501: components["responses"]["Error"];
+            /** @description The caller's tenant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tenant_id: string;
+                        /** @enum {string} */
+                        role: "owner" | "admin" | "member";
+                        created: boolean;
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    createCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @default team
+                     * @enum {string}
+                     */
+                    plan?: "solo" | "team";
+                    /** @description Team only; Solo is always a single seat. */
+                    seats?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Hosted checkout session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uri */
+                        url: string;
+                    };
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     createBillingPortal: {
@@ -1482,7 +1558,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            501: components["responses"]["Error"];
+            /** @description Hosted portal session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uri */
+                        url: string;
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     stripeWebhook: {
@@ -1494,7 +1584,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            501: components["responses"]["Error"];
+            /** @description Event accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
         };
     };
     cliAuthStart: {

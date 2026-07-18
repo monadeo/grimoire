@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Grimoire API
   description: Documentation retrieval service for AI agents, by Monadeo.
-  version: 0.6.8
+  version: 0.6.23
 servers:
   - url: https://grimoire-api.monadeo.com
     description: Production
@@ -52,7 +52,7 @@ paths:
                       version: { type: string, default: latest }
                 language: { type: string }
                 top_k: { type: integer, default: 8, minimum: 1, maximum: 20 }
-                candidates_per_source: { type: integer, default: 50, minimum: 10, maximum: 100 }
+                candidates_per_source: { type: integer, default: 100, minimum: 10, maximum: 100 }
                 max_response_tokens: { type: integer }
                 include_candidate_ids:
                   type: boolean
@@ -562,25 +562,84 @@ paths:
         "404": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
         "410": { $ref: "#/components/responses/Error" }
+  /v1/users/bootstrap:
+    post:
+      operationId: bootstrapUser
+      summary: Idempotently create the caller's user record and implicit free tenant
+      description:
+        First-login step (data-model rule "one tenant per user", server-side writes
+        only). Safe to call on every sign-in; returns the existing tenant afterwards.
+      responses:
+        "200":
+          description: The caller's tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [tenant_id, role, created]
+                properties:
+                  tenant_id: { type: string }
+                  role: { type: string, enum: [owner, admin, member] }
+                  created: { type: boolean }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /v1/billing/checkout:
     post:
       operationId: createCheckout
-      summary: Stripe checkout (Phase 6 — currently 501)
+      summary: Start a Team subscription (Stripe Checkout session; owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan: { type: string, enum: [solo, team], default: team }
+                seats:
+                  type: integer
+                  minimum: 1
+                  maximum: 500
+                  description: Team only; Solo is always a single seat.
       responses:
-        "501": { $ref: "#/components/responses/Error" }
+        "200":
+          description: Hosted checkout session
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url: { type: string, format: uri }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
   /v1/billing/portal:
     post:
       operationId: createBillingPortal
-      summary: Stripe portal (Phase 6 — currently 501)
+      summary: Open the Stripe customer portal (owner only)
       responses:
-        "501": { $ref: "#/components/responses/Error" }
+        "200":
+          description: Hosted portal session
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url: { type: string, format: uri }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
   /v1/webhooks/stripe:
     post:
       operationId: stripeWebhook
-      summary: Stripe events (HMAC-verified; Phase 6 — currently 501)
+      summary: Stripe events (signature-verified with the webhook secret; not a client API)
       security: []
       responses:
-        "501": { $ref: "#/components/responses/Error" }
+        "200":
+          description: Event accepted
+        "400": { $ref: "#/components/responses/Error" }
   /auth/cli/start:
     get:
       operationId: cliAuthStart
@@ -730,6 +789,9 @@ components:
         display_name: { type: string }
         visibility: { type: string, enum: [public, private] }
         latest_version: { type: [string, "null"] }
+        latest_semver:
+          type: [string, "null"]
+          description: Precise product version of the latest snapshot (e.g. 16.2.10), when known
         languages: { type: array, items: { type: string } }
         origin_url: { type: [string, "null"] }
     Chunk:
