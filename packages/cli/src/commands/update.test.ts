@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { detectInstallCommand } from "./update.js";
+import { detectInstallKind } from "./update.js";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -22,20 +22,20 @@ function tempBin(realDir: string): { real: string; link: string } {
   return { real, link };
 }
 
-describe("detectInstallCommand", () => {
+describe("detectInstallKind", () => {
   it("detects a Homebrew install through the bin symlink", () => {
     const { link } = tempBin("homebrew/Cellar/grimoire/0.3.3/libexec");
-    expect(detectInstallCommand(link)).toEqual(["brew", "upgrade", "monadeo/tap/grimoire"]);
+    expect(detectInstallKind(link)).toBe("brew");
   });
 
   it("detects a global npm install", () => {
     const { link } = tempBin("nodejs/lib/node_modules/@monadeo.com/grimoire-cli/dist");
-    expect(detectInstallCommand(link)).toEqual(["npm", "install", "-g", "@monadeo.com/grimoire-cli"]);
+    expect(detectInstallKind(link)).toBe("npm");
   });
 
   it("refuses to guess for unknown layouts and missing paths", () => {
     const { link } = tempBin("some/checkout/packages/cli/dist");
-    expect(detectInstallCommand(link)).toBeUndefined();
-    expect(detectInstallCommand("/nonexistent/grimoire")).toBeUndefined();
+    expect(detectInstallKind(link)).toBeUndefined();
+    expect(detectInstallKind("/nonexistent/grimoire")).toBeUndefined();
   });
 });
