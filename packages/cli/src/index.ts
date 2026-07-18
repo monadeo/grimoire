@@ -55,9 +55,26 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
        GRIMOIRE_API_URL   — API origin without a path, e.g. https://grimoire-api-qa.monadeo.com
 `;
 
+// Canonical flag names each command accepts; parseArgs rejects anything else.
+// Commands absent from this map skip validation and fall through to the
+// unknown-command error.
+const COMMAND_FLAGS: Record<string, readonly string[]> = {
+  version: [], "--version": [], "-v": [],
+  login: [], logout: [], setup: [], init: [], whoami: [],
+  help: [], "--help": [], "-h": [],
+  mcp: ["http"],
+  search: ["source", "lang", "top-k", "json", "compact"],
+  sources: ["q", "names", "json"],
+  versions: ["json"],
+  doc: ["window"],
+  report: ["verdict", "note"],
+  ingest: ["version", "private", "webhook", "watch"],
+  jobs: ["watch"],
+};
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  const args = parseArgs(rest, { "-s": "source", "-q": "q" });
+  const args = parseArgs(rest, { "-s": "source", "-q": "q" }, command !== undefined ? COMMAND_FLAGS[command] : []);
   const json = args.bools.has("json");
 
   switch (command) {

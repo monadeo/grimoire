@@ -9,7 +9,11 @@ export class UsageError extends Error {}
 
 const BOOL_FLAGS = new Set(["json", "compact", "watch", "private", "names", "http"]);
 
-export function parseArgs(argv: string[], aliases: Record<string, string> = {}): ParsedArgs {
+export function parseArgs(
+  argv: string[],
+  aliases: Record<string, string> = {},
+  allowed?: readonly string[],
+): ParsedArgs {
   const positionals: string[] = [];
   const flags: Record<string, string[]> = {};
   const bools = new Set<string>();
@@ -17,6 +21,11 @@ export function parseArgs(argv: string[], aliases: Record<string, string> = {}):
     const arg = argv[i];
     if (arg.startsWith("--") || arg.startsWith("-")) {
       const name = aliases[arg] ?? arg.replace(/^--?/, "");
+      // A misspelled flag silently swallowing its value (`--top 4` when the
+      // real flag is --top-k) must fail loudly, not act like it worked.
+      if (allowed && !allowed.includes(name)) {
+        throw new UsageError(`Unknown flag ${arg} — run \`grimoire help\` for valid flags`);
+      }
       if (BOOL_FLAGS.has(name)) {
         bools.add(name);
       } else {

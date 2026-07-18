@@ -42,6 +42,30 @@ describe("parseArgs bool flags", () => {
   });
 });
 
+describe("parseArgs unknown-flag rejection", () => {
+  const SEARCH_FLAGS = ["source", "lang", "top-k", "json", "compact"];
+
+  it("rejects a value-taking flag outside the allowed set instead of swallowing its value", () => {
+    expect(() => parseArgs(["--top", "4"], {}, SEARCH_FLAGS)).toThrow(UsageError);
+    expect(() => parseArgs(["--top", "4"], {}, SEARCH_FLAGS)).toThrow("Unknown flag --top");
+  });
+
+  it("rejects a bool flag outside the allowed set", () => {
+    expect(() => parseArgs(["--watch"], {}, SEARCH_FLAGS)).toThrow("Unknown flag --watch");
+  });
+
+  it("accepts allowed flags, including via alias", () => {
+    const a = parseArgs(["-s", "nextjs@16", "--top-k", "3", "--compact"], { "-s": "source" }, SEARCH_FLAGS);
+    expect(a.flags.source).toEqual(["nextjs@16"]);
+    expect(a.flags["top-k"]).toEqual(["3"]);
+    expect(a.bools.has("compact")).toBe(true);
+  });
+
+  it("stays lenient when no allowed set is given", () => {
+    expect(parseArgs(["--anything", "x"]).flags.anything).toEqual(["x"]);
+  });
+});
+
 describe("requirePositional", () => {
   it("returns the positional when present", () => {
     expect(requirePositional(parseArgs(["job-1"]), 0, "Usage: grimoire jobs <job_id>")).toBe("job-1");
