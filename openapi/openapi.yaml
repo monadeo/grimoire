@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Grimoire API
   description: Documentation retrieval service for AI agents, by Monadeo.
-  version: 0.6.25
+  version: 0.6.27
 servers:
   - url: https://grimoire-api.monadeo.com
     description: Production
@@ -74,6 +74,10 @@ paths:
                     items: { $ref: "#/components/schemas/Chunk" }
                   confidence: { type: string, enum: [strong, weak] }
                   reranked: { type: boolean }
+                  rerank_status:
+                    type: string
+                    enum: [used, degraded, disabled]
+                    description: used = cross-encoder ordered the results; degraded = reranker configured but unavailable, fused order served; disabled = no reranker in the retrieval config
                   resolved_versions:
                     type: object
                     additionalProperties: { type: string }

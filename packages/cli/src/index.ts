@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import {
   GrimoireClient,
   ApiError,
@@ -149,7 +151,16 @@ async function main(argv: string[]): Promise<number> {
         const explicit = parseSourceFlags(args.flags.source);
         const sources = explicit.length > 0 ? explicit : resolveDefaultSources();
         if (sources.length === 0) {
-          process.stderr.write("No sources. Pass -s <source> or run `grimoire init`.\n");
+          // `grimoire init` only helps when there are dependencies to pin from —
+          // suggesting it in an infra repo is a dead end (Astro 2026-07-18).
+          const initHelps = existsSync(join(process.cwd(), "package.json")) || existsSync(join(process.cwd(), "requirements.txt"));
+          process.stderr.write(
+            "No sources selected. List what is indexed:\n" +
+              "  grimoire sources\n" +
+              "then scope the search:\n" +
+              '  grimoire search "<query>" -s <source>[@version]\n' +
+              (initHelps ? "or pin this project's sources from its dependencies:\n  grimoire init\n" : ""),
+          );
           return EXIT.apiError;
         }
         const res = await client.search({
@@ -159,8 +170,8 @@ async function main(argv: string[]): Promise<number> {
           top_k: intFlag(args, "top-k"),
         });
         if (json) process.stdout.write(JSON.stringify(res, null, 2) + "\n");
-        else if (args.bools.has("compact")) printCompact(res.results, res.confidence);
-        else printResults(res.results, res.confidence);
+        else if (args.bools.has("compact")) printCompact(res.results, res.confidence, res.rerank_status);
+        else printResults(res.results, res.confidence, res.rerank_status);
         return EXIT.ok;
       }
       case "sources": {

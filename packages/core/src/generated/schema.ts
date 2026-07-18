@@ -746,6 +746,11 @@ export interface operations {
                         /** @enum {string} */
                         confidence: "strong" | "weak";
                         reranked: boolean;
+                        /**
+                         * @description used = cross-encoder ordered the results; degraded = reranker configured but unavailable, fused order served; disabled = no reranker in the retrieval config
+                         * @enum {string}
+                         */
+                        rerank_status?: "used" | "degraded" | "disabled";
                         resolved_versions: {
                             [key: string]: string;
                         };
