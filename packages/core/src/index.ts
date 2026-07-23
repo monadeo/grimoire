@@ -15,6 +15,9 @@ export {
   storeRefreshToken,
   readRefreshToken,
   clearRefreshToken,
+  storeMachineToken,
+  readMachineToken,
+  clearMachineToken,
 } from "./auth.js";
 export {
   GrimoireClient,

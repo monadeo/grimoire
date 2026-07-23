@@ -3,6 +3,9 @@ import {
   globalConfigPath,
   loadGlobalConfig,
   updateGlobalConfigFile,
+  storeMachineToken,
+  readMachineToken,
+  clearMachineToken,
   type GlobalConfig,
 } from "@monadeo.com/grimoire-core";
 import { UsageError, type ParsedArgs } from "../args.js";
@@ -53,7 +56,14 @@ export const CONFIG_KEYS: Record<string, KeySpec> = {
   },
 };
 
-const USAGE = "Usage: grimoire config [<key>] [<value>] [--unset]  (keys: " + Object.keys(CONFIG_KEYS).join(", ") + ")";
+// auth-token is a secret and lives in a 0600 file, not the world-readable
+// config.json — so it is handled outside the CONFIG_KEYS (GlobalConfig) framework.
+const AUTH_TOKEN_KEY = "auth-token";
+const MACHINE_TOKEN_RE = /^mt_[0-9a-f]{64}$/;
+const USAGE =
+  "Usage: grimoire config [<key>] [<value>] [--unset]  (keys: " +
+  [...Object.keys(CONFIG_KEYS), AUTH_TOKEN_KEY].join(", ") +
+  ")";
 
 export function runConfig(args: ParsedArgs): number {
   const [key, value] = args.positionals;
@@ -64,6 +74,27 @@ export function runConfig(args: ParsedArgs): number {
       const current = resolved[spec.prop];
       process.stdout.write(`${name} = ${current === undefined ? "(unset)" : JSON.stringify(current)}  # ${spec.describe}\n`);
     }
+    process.stdout.write(
+      `${AUTH_TOKEN_KEY} = ${readMachineToken() ? "(set)" : "(unset)"}  # machine token, stored 0600 (env GRIMOIRE_AUTH_TOKEN overrides)\n`,
+    );
+    return EXIT.ok;
+  }
+  if (key === AUTH_TOKEN_KEY) {
+    if (args.bools.has("unset")) {
+      clearMachineToken();
+      process.stdout.write(`${AUTH_TOKEN_KEY} unset\n`);
+      return EXIT.ok;
+    }
+    if (value === undefined) {
+      // Never echo the secret — report presence only.
+      process.stdout.write(`${readMachineToken() ? "(set)" : "(unset)"}\n`);
+      return EXIT.ok;
+    }
+    if (!MACHINE_TOKEN_RE.test(value)) {
+      throw new UsageError("auth-token must be a machine token, e.g. mt_<64 hex chars>");
+    }
+    storeMachineToken(value);
+    process.stdout.write(`${AUTH_TOKEN_KEY} set\n`);
     return EXIT.ok;
   }
   const spec = CONFIG_KEYS[key];

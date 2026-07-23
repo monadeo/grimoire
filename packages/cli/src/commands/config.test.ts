@@ -1,7 +1,8 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readMachineToken } from "@monadeo.com/grimoire-core";
 import { parseArgs, UsageError } from "../args.js";
 import { runConfig } from "./config.js";
 
@@ -64,6 +65,40 @@ describe("grimoire config", () => {
     } finally {
       stdout.mockRestore();
       delete process.env.GRIMOIRE_API_URL;
+    }
+  });
+
+  it("stores the machine token in a private file, never in config.json", () => {
+    const token = "mt_" + "a".repeat(64);
+    const stdout = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    try {
+      runConfig(parseArgs(["auth-token", token]));
+      expect(readMachineToken()).toBe(token);
+      // Bearer secret must not land in the world-readable config.json.
+      expect(existsSync(join(dir, "grimoire", "config.json"))).toBe(false);
+      // No group/other permission bits (0600), independent of the test umask.
+      expect(statSync(join(dir, "grimoire", "machine-token")).mode & 0o077).toBe(0);
+      runConfig(parseArgs(["auth-token"]));
+      expect(stdout).toHaveBeenLastCalledWith("(set)\n");
+      runConfig(parseArgs(["auth-token", "--unset"]));
+      expect(readMachineToken()).toBeUndefined();
+    } finally {
+      stdout.mockRestore();
+    }
+  });
+
+  it("rejects a malformed machine token", () => {
+    expect(() => runConfig(parseArgs(["auth-token", "not-a-token"]))).toThrow(UsageError);
+  });
+
+  it("lists auth-token presence without echoing the secret", () => {
+    const stdout = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    try {
+      runConfig(parseArgs([]));
+      const out = stdout.mock.calls.map((c) => c[0]).join("");
+      expect(out).toContain("auth-token = (unset)");
+    } finally {
+      stdout.mockRestore();
     }
   });
 });

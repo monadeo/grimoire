@@ -7,6 +7,7 @@ import {
   browserLogin,
   clearRefreshToken,
   readRefreshToken,
+  readMachineToken,
   resolveDefaultSources,
   loadGlobalConfig,
   type SourcePin,
@@ -126,6 +127,10 @@ async function main(argv: string[]): Promise<number> {
       case "whoami": {
         if (process.env.GRIMOIRE_AUTH_TOKEN) {
           process.stdout.write("machine token configured (GRIMOIRE_AUTH_TOKEN)\n");
+          return EXIT.ok;
+        }
+        if (readMachineToken()) {
+          process.stdout.write("machine token configured (grimoire config auth-token)\n");
           return EXIT.ok;
         }
         if (!readRefreshToken()) {

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { readRefreshToken } from "@monadeo.com/grimoire-core";
+import { readMachineToken, readRefreshToken } from "@monadeo.com/grimoire-core";
 
 // One-command agent onboarding (SDD decision 19 / clients spec): writes the MCP
 // registration for the named agent. `npx @monadeo.com/grimoire-mcp` needs no global install.
@@ -65,7 +65,7 @@ function setupCodex(): number {
 function hasSession(): boolean {
   if (process.env.GRIMOIRE_AUTH_TOKEN) return true;
   try {
-    return readRefreshToken() !== undefined;
+    return readMachineToken() !== undefined || readRefreshToken() !== undefined;
   } catch {
     return false;
   }

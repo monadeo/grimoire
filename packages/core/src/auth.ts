@@ -40,6 +40,36 @@ export function clearRefreshToken(): void {
   if (existsSync(credentialsPath())) rmSync(credentialsPath());
 }
 
+// Persisted machine token, for users who want a `mt_` token without exporting
+// GRIMOIRE_AUTH_TOKEN in a shell profile (that env var still overrides). Same
+// 0600 model as credentials.json — never the world-readable config.json.
+function machineTokenPath(): string {
+  return join(
+    process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"),
+    "grimoire",
+    "machine-token",
+  );
+}
+
+export function storeMachineToken(token: string): void {
+  const path = machineTokenPath();
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
+  writeFileSync(path, token + "\n", { mode: 0o600 });
+}
+
+export function readMachineToken(): string | undefined {
+  try {
+    const token = readFileSync(machineTokenPath(), "utf8").trim();
+    return token !== "" ? token : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function clearMachineToken(): void {
+  if (existsSync(machineTokenPath())) rmSync(machineTokenPath());
+}
+
 function base64url(buf: Buffer): string {
   return buf.toString("base64url");
 }

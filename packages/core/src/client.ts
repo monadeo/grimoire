@@ -1,4 +1,4 @@
-import { readRefreshToken } from "./auth.js";
+import { readMachineToken, readRefreshToken } from "./auth.js";
 import { loadGlobalConfig } from "./config.js";
 import { ApiError } from "./errors.js";
 import { fetchWithTimeout } from "./http.js";
@@ -35,7 +35,7 @@ export class GrimoireClient {
 
   constructor(opts: ClientOptions = {}) {
     this.baseUrl = (opts.baseUrl ?? loadGlobalConfig().apiBaseUrl).replace(/\/+$/, "");
-    this.machineToken = opts.machineToken ?? process.env.GRIMOIRE_AUTH_TOKEN;
+    this.machineToken = opts.machineToken ?? process.env.GRIMOIRE_AUTH_TOKEN ?? readMachineToken();
   }
 
   private async bearer(): Promise<string> {
