@@ -11,7 +11,7 @@ export {
   type SourcePin,
 } from "./config.js";
 export {
-  passwordLogin,
+  browserLogin,
   fetchAuthConfig,
   gotrueToken,
   storeSession,
@@ -40,4 +40,5 @@ export {
   type SubmissionIn,
   type SubmitAccepted,
   type JobOut,
+  type MeOut,
 } from "./client.js";

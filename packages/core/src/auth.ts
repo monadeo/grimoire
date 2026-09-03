@@ -1,4 +1,6 @@
+import { createHash, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createServer, type Server } from "node:http";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { ApiError } from "./errors.js";
@@ -84,6 +86,8 @@ export function clearMachineToken(): void {
 export interface AuthConfig {
   supabase_url: string;
   supabase_anon_key: string;
+  oauth_provider: string;
+  redirect_urls: string[];
 }
 
 export interface TokenResponse {
@@ -92,16 +96,38 @@ export interface TokenResponse {
   expires_in: number;
 }
 
-// The API publishes the Supabase project URL and anon key (public by design), so
-// a client only ever needs the API origin.
+// The API publishes everything a client needs to log in: the public Supabase
+// URL, its anon key (public by design), the OAuth provider, and the loopback
+// callbacks that are allow-listed for the PKCE flow.
 export async function fetchAuthConfig(apiBase: string): Promise<AuthConfig> {
   const res = await fetchWithTimeout(`${apiBase.replace(/\/+$/, "")}/v1/auth/config`);
   if (!res.ok) throw new ApiError(res.status, "auth_config_unavailable", await res.text());
   const body = (await res.json()) as Partial<AuthConfig>;
-  if (typeof body.supabase_url !== "string" || typeof body.supabase_anon_key !== "string") {
+  if (
+    typeof body.supabase_url !== "string" ||
+    typeof body.supabase_anon_key !== "string" ||
+    typeof body.oauth_provider !== "string" ||
+    !Array.isArray(body.redirect_urls) ||
+    body.redirect_urls.length === 0
+  ) {
     throw new ApiError(res.status, "auth_config_malformed", body);
   }
-  return { supabase_url: body.supabase_url, supabase_anon_key: body.supabase_anon_key };
+  return {
+    supabase_url: body.supabase_url,
+    supabase_anon_key: body.supabase_anon_key,
+    oauth_provider: body.oauth_provider,
+    redirect_urls: body.redirect_urls.map(String),
+  };
+}
+
+type GrantType = "pkce" | "refresh_token";
+
+function parseDetail(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }
 
 // Supabase Auth (GoTrue) token endpoint: POST /auth/v1/token?grant_type=…, the
@@ -109,7 +135,7 @@ export async function fetchAuthConfig(apiBase: string): Promise<AuthConfig> {
 export async function gotrueToken(
   supabaseUrl: string,
   anonKey: string,
-  grantType: "password" | "refresh_token",
+  grantType: GrantType,
   body: Record<string, string>,
 ): Promise<TokenResponse> {
   const res = await fetchWithTimeout(
@@ -122,7 +148,7 @@ export async function gotrueToken(
   );
   const text = await res.text();
   if (!res.ok) {
-    throw new ApiError(res.status, grantType === "password" ? "login_failed" : "refresh_failed", parseDetail(text));
+    throw new ApiError(res.status, grantType === "pkce" ? "login_failed" : "refresh_failed", parseDetail(text));
   }
   const parsed = JSON.parse(text) as Partial<TokenResponse>;
   if (
@@ -139,19 +165,85 @@ export async function gotrueToken(
   };
 }
 
-function parseDetail(text: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
+function base64url(buf: Buffer): string {
+  return buf.toString("base64url");
 }
 
-export async function passwordLogin(apiBase: string, email: string, password: string): Promise<void> {
+// Bind the first free allow-listed loopback callback. The list comes from the
+// API, so the client and the Supabase allow list cannot drift.
+async function bindCallback(server: Server, redirectUrls: string[]): Promise<string> {
+  for (const candidate of redirectUrls) {
+    const port = Number(new URL(candidate).port);
+    const bound = await new Promise<boolean>((resolve) => {
+      const onError = (): void => {
+        server.off("error", onError);
+        resolve(false);
+      };
+      server.once("error", onError);
+      server.listen(port, "127.0.0.1", () => {
+        server.off("error", onError);
+        resolve(true);
+      });
+    });
+    if (bound) return candidate;
+  }
+  throw new Error(`No free login callback port among: ${redirectUrls.join(", ")}`);
+}
+
+// OAuth Authorization Code with PKCE through Supabase Auth: open the provider
+// login in the browser, receive the code on a loopback callback, exchange code +
+// verifier for tokens. No client secret exists anywhere in the client.
+export async function browserLogin(
+  apiBase: string,
+  openBrowser: (url: string) => void,
+  timeoutMs = 300_000,
+): Promise<void> {
   const config = await fetchAuthConfig(apiBase);
-  const tokens = await gotrueToken(config.supabase_url, config.supabase_anon_key, "password", {
-    email,
-    password,
+  const verifier = base64url(randomBytes(32));
+  const challenge = base64url(createHash("sha256").update(verifier).digest());
+
+  const code = await new Promise<string>((resolve, reject) => {
+    let timer: NodeJS.Timeout | undefined;
+    const finish = (outcome: { code: string } | { error: Error }): void => {
+      if (timer) clearTimeout(timer);
+      server.close();
+      if ("code" in outcome) resolve(outcome.code);
+      else reject(outcome.error);
+    };
+    const server = createServer((req, res) => {
+      const url = new URL(req.url ?? "/", "http://localhost");
+      if (req.method !== "GET" || url.pathname !== "/callback") {
+        res.writeHead(404).end();
+        return;
+      }
+      const failure = url.searchParams.get("error_description") ?? url.searchParams.get("error");
+      const received = url.searchParams.get("code");
+      if (failure || !received) {
+        res.writeHead(400, { "Content-Type": "text/plain" }).end(`Login failed: ${failure ?? "no code"}`);
+        finish({ error: new Error(`Login failed: ${failure ?? "no code returned"}`) });
+        return;
+      }
+      res
+        .writeHead(200, { "Content-Type": "text/plain" })
+        .end("Logged in to Grimoire. You can close this tab.");
+      finish({ code: received });
+    });
+    bindCallback(server, config.redirect_urls)
+      .then((redirectUrl) => {
+        timer = setTimeout(() => finish({ error: new Error("Login timed out") }), timeoutMs);
+        const authorize = new URL(`${config.supabase_url.replace(/\/+$/, "")}/auth/v1/authorize`);
+        authorize.searchParams.set("provider", config.oauth_provider);
+        authorize.searchParams.set("redirect_to", redirectUrl);
+        authorize.searchParams.set("code_challenge", challenge);
+        authorize.searchParams.set("code_challenge_method", "s256");
+        openBrowser(authorize.toString());
+      })
+      .catch((err: Error) => finish({ error: err }));
+  });
+
+  const tokens = await gotrueToken(config.supabase_url, config.supabase_anon_key, "pkce", {
+    auth_code: code,
+    code_verifier: verifier,
   });
   storeSession({
     refresh_token: tokens.refresh_token,

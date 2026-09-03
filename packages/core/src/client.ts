@@ -17,6 +17,7 @@ export type ReportOut = Schemas["ReportOut"];
 export type SubmissionIn = Schemas["SubmissionIn"];
 export type SubmitAccepted = Schemas["SubmitAccepted"];
 export type JobOut = Schemas["JobOut"];
+export type MeOut = Schemas["MeOut"];
 
 export { ApiError } from "./errors.js";
 
@@ -151,5 +152,24 @@ export class GrimoireClient {
 
   getJob(jobId: string): Promise<JobOut> {
     return this.request<JobOut>(`/v1/jobs/${encodeURIComponent(jobId)}`);
+  }
+
+  me(): Promise<MeOut> {
+    return this.request<MeOut>("/v1/me");
+  }
+
+  reviewQueue(): Promise<JobOut[]> {
+    return this.request<JobOut[]>("/v1/staff/review-queue");
+  }
+
+  approveJob(jobId: string): Promise<JobOut> {
+    return this.request<JobOut>(`/v1/staff/jobs/${encodeURIComponent(jobId)}/approve`, { method: "POST" });
+  }
+
+  rejectJob(jobId: string, reason: string): Promise<JobOut> {
+    return this.request<JobOut>(`/v1/staff/jobs/${encodeURIComponent(jobId)}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
   }
 }

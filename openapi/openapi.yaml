@@ -2,6 +2,14 @@ components:
   schemas:
     AuthConfigOut:
       properties:
+        oauth_provider:
+          title: Oauth Provider
+          type: string
+        redirect_urls:
+          items:
+            type: string
+          title: Redirect Urls
+          type: array
         supabase_anon_key:
           title: Supabase Anon Key
           type: string
@@ -11,6 +19,8 @@ components:
       required:
       - supabase_url
       - supabase_anon_key
+      - oauth_provider
+      - redirect_urls
       title: AuthConfigOut
       type: object
     Candidate:
@@ -159,6 +169,27 @@ components:
       - created_at
       - updated_at
       title: JobOut
+      type: object
+    MeOut:
+      properties:
+        is_staff:
+          title: Is Staff
+          type: boolean
+        kind:
+          title: Kind
+          type: string
+        quota_per_day:
+          title: Quota Per Day
+          type: integer
+        subject:
+          title: Subject
+          type: string
+      required:
+      - kind
+      - subject
+      - is_staff
+      - quota_per_day
+      title: MeOut
       type: object
     ProbeConfig:
       properties:
@@ -716,6 +747,19 @@ paths:
       security:
       - HTTPBearer: []
       summary: Get Job
+  /v1/me:
+    get:
+      operationId: me_v1_me_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeOut'
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Me
   /v1/report:
     post:
       operationId: report_result_v1_report_post

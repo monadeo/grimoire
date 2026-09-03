@@ -19,7 +19,7 @@ export interface ProjectConfig {
 
 // Bare origin — API paths are absolute (/v1/...), so the base must never carry a
 // path prefix.
-export const DEFAULT_API_BASE = "https://grimoire-api.monadeo.com";
+export const DEFAULT_API_BASE = "https://cli.grimoire.monadeo.com";
 
 export function globalConfigPath(): string {
   return join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "grimoire", "config.json");

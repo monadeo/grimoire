@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Me */
+        get: operations["me_v1_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/report": {
         parameters: {
             query?: never;
@@ -249,6 +266,10 @@ export interface components {
     schemas: {
         /** AuthConfigOut */
         AuthConfigOut: {
+            /** Oauth Provider */
+            oauth_provider: string;
+            /** Redirect Urls */
+            redirect_urls: string[];
             /** Supabase Anon Key */
             supabase_anon_key: string;
             /** Supabase Url */
@@ -329,6 +350,17 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** MeOut */
+        MeOut: {
+            /** Is Staff */
+            is_staff: boolean;
+            /** Kind */
+            kind: string;
+            /** Quota Per Day */
+            quota_per_day: number;
+            /** Subject */
+            subject: string;
         };
         /** ProbeConfig */
         ProbeConfig: {
@@ -674,6 +706,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    me_v1_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
                 };
             };
         };

@@ -17,7 +17,7 @@ brew install grimoire
 # or npm
 npm install -g @monadeo.com/grimoire-cli
 
-grimoire login                           # email + password of your Grimoire account
+grimoire login                           # browser single sign-on (PKCE)
 grimoire setup claude-code               # wire the MCP server into your agent
 ```
 

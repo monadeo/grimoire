@@ -1,26 +1,36 @@
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   GrimoireClient,
   ApiError,
-  passwordLogin,
+  browserLogin,
   clearSession,
   readSession,
   readMachineToken,
   resolveDefaultSources,
   loadGlobalConfig,
+  type JobOut,
   type SourcePin,
   type SourceSelector,
 } from "@monadeo.com/grimoire-core";
 import { parseArgs, requirePositional, requireFlagOneOf, intFlag, UsageError } from "./args.js";
 import { printResults, printCompact, EXIT } from "./output.js";
-import { promptHidden, promptLine } from "./prompt.js";
 import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
 import { runConfig } from "./commands/config.js";
 import { runUpdate } from "./commands/update.js";
 import { submissionFromArgs } from "./commands/ingest.js";
 import { notifyIfOutdated, refreshUpdateState } from "./updatecheck.js";
+
+function openBrowser(url: string): void {
+  const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+  try {
+    execFileSync(cmd, [url], { stdio: "ignore" });
+  } catch {
+    process.stdout.write(`Open this URL to log in:\n${url}\n`);
+  }
+}
 
 function parseSourceFlags(values: string[] | undefined): SourcePin[] {
   return (values ?? []).map((v) => {
@@ -40,7 +50,7 @@ const VERSION = typeof __GRIMOIRE_VERSION__ === "string" ? __GRIMOIRE_VERSION__ 
 
 const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
 
-  grimoire login [--email you@example.com] | logout | whoami
+  grimoire login | logout | whoami
   grimoire setup <claude-code|cursor|windsurf|codex>
   grimoire init
   grimoire search "<query>" [-s nextjs@15 -s react] [--json|--compact] [--debug]
@@ -53,6 +63,7 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
   grimoire ingest <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo>)
                         [--include <pattern>]... [--exclude <pattern>]... [--watch]
   grimoire jobs <job_id> [--watch]
+  grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."
   grimoire mcp [--http]
   grimoire help | --help | -h
   grimoire version | --version | -v
@@ -64,7 +75,7 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
 // Canonical flag names each command accepts; parseArgs rejects anything else.
 const COMMAND_FLAGS: Record<string, readonly string[]> = {
   version: [], "--version": [], "-v": [],
-  login: ["email"], logout: [], setup: [], init: [], whoami: [],
+  login: [], logout: [], setup: [], init: [], whoami: [],
   help: [], "--help": [], "-h": [],
   mcp: ["http"],
   config: ["unset"],
@@ -76,6 +87,7 @@ const COMMAND_FLAGS: Record<string, readonly string[]> = {
   report: ["verdict", "note"],
   ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "include", "exclude", "watch"],
   jobs: ["watch"],
+  staff: ["reason", "json"],
 };
 
 function describeError(err: ApiError): string {
@@ -86,6 +98,13 @@ function describeError(err: ApiError): string {
         ? JSON.stringify(err.body)
         : "";
   return `error: ${err.code}${detail ? ` — ${detail}` : ""}`;
+}
+
+function describeJob(job: JobOut): string {
+  const extra = [job.reason ? `reason: ${job.reason}` : "", job.source_id ? `source: ${job.source_id}` : ""]
+    .filter(Boolean)
+    .join("  ");
+  return `${job.state}${extra ? `  ${extra}` : ""}`;
 }
 
 async function main(argv: string[]): Promise<number> {
@@ -100,9 +119,8 @@ async function main(argv: string[]): Promise<number> {
       process.stdout.write(`${VERSION}\n`);
       return EXIT.ok;
     case "login": {
-      const email = args.flags.email?.[0] ?? (await promptLine("Email: "));
-      const password = await promptHidden("Password: ");
-      await passwordLogin(loadGlobalConfig().apiBaseUrl, email, password);
+      process.stderr.write("Opening your browser to log in…\n");
+      await browserLogin(loadGlobalConfig().apiBaseUrl, openBrowser);
       process.stdout.write("Logged in.\n");
       return EXIT.ok;
     }
@@ -133,27 +151,22 @@ async function main(argv: string[]): Promise<number> {
   try {
     switch (command) {
       case "whoami": {
-        if (process.env.GRIMOIRE_AUTH_TOKEN) {
-          process.stdout.write("machine token configured (GRIMOIRE_AUTH_TOKEN)\n");
-          return EXIT.ok;
-        }
-        if (readMachineToken()) {
-          process.stdout.write("machine token configured (grimoire config auth-token)\n");
-          return EXIT.ok;
-        }
-        if (!readSession()) {
+        const via = process.env.GRIMOIRE_AUTH_TOKEN
+          ? "GRIMOIRE_AUTH_TOKEN"
+          : readMachineToken()
+            ? "grimoire config auth-token"
+            : readSession()
+              ? "browser login"
+              : undefined;
+        if (!via) {
           process.stderr.write("not logged in — run `grimoire login`\n");
           return EXIT.authRequired;
         }
-        try {
-          await client.refreshSession();
-          process.stdout.write("logged in\n");
-          return EXIT.ok;
-        } catch (err) {
-          const reason = err instanceof ApiError ? err.code : (err as Error).message;
-          process.stderr.write(`not logged in (${reason}) — run \`grimoire login\`\n`);
-          return EXIT.authRequired;
-        }
+        const me = await client.me();
+        process.stdout.write(
+          `${me.kind} ${me.subject}${me.is_staff ? "  staff" : ""}  quota ${me.quota_per_day}/day  via ${via}\n`,
+        );
+        return EXIT.ok;
       }
       case "search": {
         const query = args.positionals[0];
@@ -242,6 +255,29 @@ async function main(argv: string[]): Promise<number> {
         const jobId = requirePositional(args, 0, "Usage: grimoire jobs <job_id> [--watch]");
         return args.bools.has("watch") ? watchJob(client, jobId) : printJob(client, jobId);
       }
+      case "staff": {
+        const usage = 'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."';
+        const [action, jobId] = args.positionals;
+        if (action === "queue") {
+          const queue = await client.reviewQueue();
+          if (json) process.stdout.write(JSON.stringify(queue, null, 2) + "\n");
+          else if (queue.length === 0) process.stdout.write("review queue is empty\n");
+          else for (const job of queue) process.stdout.write(`${job.id}  ${describeJob(job)}\n`);
+          return EXIT.ok;
+        }
+        if (!jobId) throw new UsageError(usage);
+        if (action === "approve") {
+          process.stdout.write(`${describeJob(await client.approveJob(jobId))}\n`);
+          return EXIT.ok;
+        }
+        if (action === "reject") {
+          const reason = args.flags.reason?.[0];
+          if (!reason) throw new UsageError(usage);
+          process.stdout.write(`${describeJob(await client.rejectJob(jobId, reason))}\n`);
+          return EXIT.ok;
+        }
+        throw new UsageError(usage);
+      }
       default:
         process.stderr.write(`Unknown command: ${command}\n${HELP}`);
         return EXIT.apiError;
@@ -250,6 +286,7 @@ async function main(argv: string[]): Promise<number> {
     if (err instanceof ApiError) {
       process.stderr.write(`${describeError(err)}\n`);
       if (err.status === 401) return EXIT.authRequired;
+      if (err.status === 403) return EXIT.authRequired;
       if (err.status === 429) return EXIT.quota;
       if (err.status === 404) return EXIT.notFound;
       return EXIT.apiError;
@@ -260,13 +297,6 @@ async function main(argv: string[]): Promise<number> {
 
 const TERMINAL_STATES = ["accepted", "done", "rejected", "failed", "pending_review"];
 const FAILED_STATES = ["rejected", "failed"];
-
-function describeJob(job: { state: string; reason?: string | null; source_id?: string | null }): string {
-  const extra = [job.reason ? `reason: ${job.reason}` : "", job.source_id ? `source: ${job.source_id}` : ""]
-    .filter(Boolean)
-    .join("  ");
-  return `${job.state}${extra ? `  ${extra}` : ""}`;
-}
 
 async function printJob(client: GrimoireClient, jobId: string): Promise<number> {
   const job = await client.getJob(jobId);
@@ -291,7 +321,7 @@ async function watchJob(client: GrimoireClient, jobId: string): Promise<number> 
       process.stdout.write(`${describeJob(job)}\n`);
       if (TERMINAL_STATES.includes(job.state)) {
         if (job.state === "pending_review") {
-          process.stderr.write("Parked for staff review; a staff member approves it in the review queue.\n");
+          process.stderr.write("Parked for staff review: grimoire staff queue\n");
         }
         return FAILED_STATES.includes(job.state) ? EXIT.apiError : EXIT.ok;
       }
