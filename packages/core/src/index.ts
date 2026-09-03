@@ -41,4 +41,5 @@ export {
   type SubmitAccepted,
   type JobOut,
   type MeOut,
+  type UserGrantOut,
 } from "./client.js";

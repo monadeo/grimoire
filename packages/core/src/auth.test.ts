@@ -24,7 +24,7 @@ const CONFIG = {
   supabase_url: "https://sb.test",
   supabase_anon_key: "anon",
   oauth_provider: "custom:zitadel",
-  redirect_urls: ["http://localhost:53682/callback", "http://localhost:53683/callback"],
+  redirect_urls: ["http://127.0.0.1:53682/callback", "http://127.0.0.1:53683/callback"],
 };
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -33,9 +33,9 @@ function jsonResponse(status: number, body: unknown): Response {
 
 function hit(url: string): Promise<number> {
   return new Promise((resolve, reject) => {
-    httpGet(url, (res) => {
+    httpGet(url, { agent: false }, (res) => {
       res.resume();
-      resolve(res.statusCode ?? 0);
+      res.on("end", () => resolve(res.statusCode ?? 0));
     }).on("error", reject);
   });
 }
@@ -96,7 +96,10 @@ describe("browserLogin (PKCE)", () => {
     expect(parsed.origin + parsed.pathname).toBe("https://sb.test/auth/v1/authorize");
     expect(parsed.searchParams.get("provider")).toBe("custom:zitadel");
     expect(parsed.searchParams.get("code_challenge_method")).toBe("s256");
-    expect(CONFIG.redirect_urls).toContain(parsed.searchParams.get("redirect_to"));
+    const redirectTo = parsed.searchParams.get("redirect_to") ?? "";
+    const base = redirectTo.slice(0, redirectTo.lastIndexOf("/"));
+    expect(CONFIG.redirect_urls).toContain(base);
+    expect(redirectTo.slice(base.length + 1)).toMatch(/^[A-Za-z0-9_-]{16,}$/);
 
     expect(exchanges).toHaveLength(1);
     const { auth_code, code_verifier } = exchanges[0];
@@ -115,6 +118,24 @@ describe("browserLogin (PKCE)", () => {
       void hit(`${callback}?error=access_denied&error_description=denied`);
     };
     await expect(browserLogin("https://api.test", openBrowser, 10_000)).rejects.toThrow(/denied/);
+    expect(readSession()).toBeUndefined();
+  });
+});
+
+describe("browserLogin state binding", () => {
+  it("ignores a callback whose state segment does not match", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(200, CONFIG)));
+    let attempts = 0;
+    const openBrowser = (url: string): void => {
+      const redirectTo = new URL(url).searchParams.get("redirect_to") ?? "";
+      const base = redirectTo.slice(0, redirectTo.lastIndexOf("/"));
+      void hit(`${base}/wrong-state?code=stolen`).then((status) => {
+        attempts = status;
+        void hit(`${redirectTo}?error=access_denied&error_description=stop`);
+      });
+    };
+    await expect(browserLogin("https://api.test", openBrowser, 10_000)).rejects.toThrow(/stop/);
+    expect(attempts).toBe(404);
     expect(readSession()).toBeUndefined();
   });
 });

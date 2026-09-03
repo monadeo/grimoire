@@ -64,6 +64,7 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
                         [--include <pattern>]... [--exclude <pattern>]... [--watch]
   grimoire jobs <job_id> [--watch]
   grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."
+  grimoire staff users [--json] | grant <subject> --name "..." | revoke <subject>
   grimoire mcp [--http]
   grimoire help | --help | -h
   grimoire version | --version | -v
@@ -87,7 +88,7 @@ const COMMAND_FLAGS: Record<string, readonly string[]> = {
   report: ["verdict", "note"],
   ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "include", "exclude", "watch"],
   jobs: ["watch"],
-  staff: ["reason", "json"],
+  staff: ["reason", "name", "json"],
 };
 
 function describeError(err: ApiError): string {
@@ -256,8 +257,28 @@ async function main(argv: string[]): Promise<number> {
         return args.bools.has("watch") ? watchJob(client, jobId) : printJob(client, jobId);
       }
       case "staff": {
-        const usage = 'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."';
+        const usage =
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject>';
         const [action, jobId] = args.positionals;
+        if (action === "users") {
+          const users = await client.listUsers();
+          if (json) process.stdout.write(JSON.stringify(users, null, 2) + "\n");
+          else for (const u of users) process.stdout.write(`${u.subject}  ${u.status}  ${u.name}  by ${u.granted_by}\n`);
+          return EXIT.ok;
+        }
+        if (action === "grant") {
+          const name = args.flags.name?.[0];
+          if (!jobId || !name) throw new UsageError(usage);
+          const granted = await client.grantUser(jobId, name);
+          process.stdout.write(`${granted.subject}  ${granted.status}  ${granted.name}\n`);
+          return EXIT.ok;
+        }
+        if (action === "revoke") {
+          if (!jobId) throw new UsageError(usage);
+          const revoked = await client.revokeUser(jobId);
+          process.stdout.write(`${revoked.subject}  ${revoked.status}\n`);
+          return EXIT.ok;
+        }
         if (action === "queue") {
           const queue = await client.reviewQueue();
           if (json) process.stdout.write(JSON.stringify(queue, null, 2) + "\n");

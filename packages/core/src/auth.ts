@@ -169,8 +169,8 @@ function base64url(buf: Buffer): string {
   return buf.toString("base64url");
 }
 
-// Bind the first free allow-listed loopback callback. The list comes from the
-// API, so the client and the Supabase allow list cannot drift.
+// Bind the first free allow-listed loopback callback (IPv4). The bases come
+// from the API, so the client and the Supabase allow list cannot drift.
 async function bindCallback(server: Server, redirectUrls: string[]): Promise<string> {
   for (const candidate of redirectUrls) {
     const port = Number(new URL(candidate).port);
@@ -193,6 +193,10 @@ async function bindCallback(server: Server, redirectUrls: string[]): Promise<str
 // OAuth Authorization Code with PKCE through Supabase Auth: open the provider
 // login in the browser, receive the code on a loopback callback, exchange code +
 // verifier for tokens. No client secret exists anywhere in the client.
+//
+// Supabase Auth's /authorize carries no `state` parameter, so the per-attempt
+// state rides in the callback path (`/callback/<state>`); any other path is a
+// 404 and the server keeps waiting. The allow list holds `/callback/*`.
 export async function browserLogin(
   apiBase: string,
   openBrowser: (url: string) => void,
@@ -201,18 +205,20 @@ export async function browserLogin(
   const config = await fetchAuthConfig(apiBase);
   const verifier = base64url(randomBytes(32));
   const challenge = base64url(createHash("sha256").update(verifier).digest());
+  const state = base64url(randomBytes(16));
 
   const code = await new Promise<string>((resolve, reject) => {
     let timer: NodeJS.Timeout | undefined;
     const finish = (outcome: { code: string } | { error: Error }): void => {
       if (timer) clearTimeout(timer);
+      server.closeAllConnections();
       server.close();
       if ("code" in outcome) resolve(outcome.code);
       else reject(outcome.error);
     };
     const server = createServer((req, res) => {
-      const url = new URL(req.url ?? "/", "http://localhost");
-      if (req.method !== "GET" || url.pathname !== "/callback") {
+      const url = new URL(req.url ?? "/", "http://127.0.0.1");
+      if (req.method !== "GET" || url.pathname !== `/callback/${state}`) {
         res.writeHead(404).end();
         return;
       }
@@ -229,11 +235,11 @@ export async function browserLogin(
       finish({ code: received });
     });
     bindCallback(server, config.redirect_urls)
-      .then((redirectUrl) => {
+      .then((redirectBase) => {
         timer = setTimeout(() => finish({ error: new Error("Login timed out") }), timeoutMs);
         const authorize = new URL(`${config.supabase_url.replace(/\/+$/, "")}/auth/v1/authorize`);
         authorize.searchParams.set("provider", config.oauth_provider);
-        authorize.searchParams.set("redirect_to", redirectUrl);
+        authorize.searchParams.set("redirect_to", `${redirectBase.replace(/\/+$/, "")}/${state}`);
         authorize.searchParams.set("code_challenge", challenge);
         authorize.searchParams.set("code_challenge_method", "s256");
         openBrowser(authorize.toString());

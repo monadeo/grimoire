@@ -260,6 +260,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/staff/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_v1_staff_users_get"];
+        put?: never;
+        /** Grant User */
+        post: operations["grant_user_v1_staff_users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/staff/users/{subject}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke User */
+        delete: operations["revoke_user_v1_staff_users__subject__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -549,6 +584,24 @@ export interface components {
             quota_per_day: number;
             /** Token */
             token: string;
+        };
+        /** UserGrantIn */
+        UserGrantIn: {
+            /** Name */
+            name: string;
+            /** Subject */
+            subject: string;
+        };
+        /** UserGrantOut */
+        UserGrantOut: {
+            /** Granted By */
+            granted_by: string;
+            /** Name */
+            name: string;
+            /** Status */
+            status: string;
+            /** Subject */
+            subject: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -1050,6 +1103,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenMinted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_v1_staff_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserGrantOut"][];
+                };
+            };
+        };
+    };
+    grant_user_v1_staff_users_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserGrantIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserGrantOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_user_v1_staff_users__subject__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subject: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserGrantOut"];
                 };
             };
             /** @description Validation Error */

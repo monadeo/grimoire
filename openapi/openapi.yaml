@@ -561,6 +561,42 @@ components:
       - quota_per_day
       title: TokenMinted
       type: object
+    UserGrantIn:
+      properties:
+        name:
+          minLength: 1
+          title: Name
+          type: string
+        subject:
+          minLength: 1
+          title: Subject
+          type: string
+      required:
+      - subject
+      - name
+      title: UserGrantIn
+      type: object
+    UserGrantOut:
+      properties:
+        granted_by:
+          title: Granted By
+          type: string
+        name:
+          title: Name
+          type: string
+        status:
+          title: Status
+          type: string
+        subject:
+          title: Subject
+          type: string
+      required:
+      - subject
+      - name
+      - status
+      - granted_by
+      title: UserGrantOut
+      type: object
     ValidationError:
       properties:
         ctx:
@@ -1029,3 +1065,62 @@ paths:
       security:
       - HTTPBearer: []
       summary: Mint Token
+  /v1/staff/users:
+    get:
+      operationId: list_users_v1_staff_users_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserGrantOut'
+                title: Response List Users V1 Staff Users Get
+                type: array
+          description: Successful Response
+      security: &id001
+      - HTTPBearer: []
+      summary: List Users
+    post:
+      operationId: grant_user_v1_staff_users_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserGrantIn'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGrantOut'
+          description: Successful Response
+        '422': &id002
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security: *id001
+      summary: Grant User
+  /v1/staff/users/{subject}:
+    delete:
+      operationId: revoke_user_v1_staff_users__subject__delete
+      parameters:
+      - in: path
+        name: subject
+        required: true
+        schema:
+          title: Subject
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGrantOut'
+          description: Successful Response
+        '422': *id002
+      security: *id001
+      summary: Revoke User

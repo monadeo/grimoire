@@ -18,6 +18,7 @@ export type SubmissionIn = Schemas["SubmissionIn"];
 export type SubmitAccepted = Schemas["SubmitAccepted"];
 export type JobOut = Schemas["JobOut"];
 export type MeOut = Schemas["MeOut"];
+export type UserGrantOut = Schemas["UserGrantOut"];
 
 export { ApiError } from "./errors.js";
 
@@ -164,6 +165,21 @@ export class GrimoireClient {
 
   approveJob(jobId: string): Promise<JobOut> {
     return this.request<JobOut>(`/v1/staff/jobs/${encodeURIComponent(jobId)}/approve`, { method: "POST" });
+  }
+
+  listUsers(): Promise<UserGrantOut[]> {
+    return this.request<UserGrantOut[]>("/v1/staff/users");
+  }
+
+  grantUser(subject: string, name: string): Promise<UserGrantOut> {
+    return this.request<UserGrantOut>("/v1/staff/users", {
+      method: "POST",
+      body: JSON.stringify({ subject, name }),
+    });
+  }
+
+  revokeUser(subject: string): Promise<UserGrantOut> {
+    return this.request<UserGrantOut>(`/v1/staff/users/${encodeURIComponent(subject)}`, { method: "DELETE" });
   }
 
   rejectJob(jobId: string, reason: string): Promise<JobOut> {
