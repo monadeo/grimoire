@@ -74,6 +74,7 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
   grimoire jobs <job_id> [--watch]
   grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."
   grimoire staff users [--json] | grant <subject> --name "..." | revoke <subject>
+  grimoire staff token <name> --quota <per-day> | recrawl <source_id>
   grimoire mcp [--http]
   grimoire help | --help | -h
   grimoire version | --version | -v
@@ -97,7 +98,7 @@ const COMMAND_FLAGS: Record<string, readonly string[]> = {
   report: ["verdict", "note"],
   ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "include", "exclude", "watch"],
   jobs: ["watch"],
-  staff: ["reason", "name", "json"],
+  staff: ["reason", "name", "quota", "json"],
 };
 
 function describeError(err: ApiError): string {
@@ -268,8 +269,22 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject>';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | recrawl <source_id>';
         const [action, jobId] = args.positionals;
+        if (action === "token") {
+          const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
+          if (!jobId || quota === undefined) throw new UsageError(usage);
+          const minted = await client.mintToken(jobId, quota);
+          // The plain token is shown exactly once; the server keeps only its hash.
+          process.stderr.write(`token ${minted.id}  ${minted.name}  quota ${minted.quota_per_day}/day — shown once, store it now\n`);
+          process.stdout.write(`${minted.token}\n`);
+          return EXIT.ok;
+        }
+        if (action === "recrawl") {
+          if (!jobId) throw new UsageError(usage);
+          process.stdout.write(`${describeJob(await client.recrawlSource(jobId))}\n`);
+          return EXIT.ok;
+        }
         if (action === "users") {
           const users = await client.listUsers();
           if (json) process.stdout.write(JSON.stringify(users, null, 2) + "\n");

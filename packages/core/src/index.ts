@@ -42,4 +42,5 @@ export {
   type JobOut,
   type MeOut,
   type UserGrantOut,
+  type TokenMinted,
 } from "./client.js";

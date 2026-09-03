@@ -19,6 +19,7 @@ export type SubmitAccepted = Schemas["SubmitAccepted"];
 export type JobOut = Schemas["JobOut"];
 export type MeOut = Schemas["MeOut"];
 export type UserGrantOut = Schemas["UserGrantOut"];
+export type TokenMinted = Schemas["TokenMinted"];
 
 export { ApiError } from "./errors.js";
 
@@ -180,6 +181,17 @@ export class GrimoireClient {
 
   revokeUser(subject: string): Promise<UserGrantOut> {
     return this.request<UserGrantOut>(`/v1/staff/users/${encodeURIComponent(subject)}`, { method: "DELETE" });
+  }
+
+  mintToken(name: string, quotaPerDay: number): Promise<TokenMinted> {
+    return this.request<TokenMinted>("/v1/staff/tokens", {
+      method: "POST",
+      body: JSON.stringify({ name, quota_per_day: quotaPerDay }),
+    });
+  }
+
+  recrawlSource(sourceId: string): Promise<JobOut> {
+    return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/recrawl`, { method: "POST" });
   }
 
   rejectJob(jobId: string, reason: string): Promise<JobOut> {
