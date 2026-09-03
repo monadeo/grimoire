@@ -12,6 +12,7 @@ export {
 } from "./config.js";
 export {
   browserLogin,
+  tokenClaims,
   fetchAuthConfig,
   gotrueToken,
   storeSession,

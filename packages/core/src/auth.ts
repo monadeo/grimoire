@@ -257,3 +257,16 @@ export async function browserLogin(
     supabase_anon_key: config.supabase_anon_key,
   });
 }
+
+
+// Claims of an access token, read without verification — for display only
+// (the API verifies every token it receives).
+export function tokenClaims(token: string): Record<string, unknown> {
+  const payload = token.split(".")[1];
+  if (!payload) return {};
+  try {
+    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}

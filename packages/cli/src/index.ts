@@ -111,6 +111,22 @@ function describeError(err: ApiError): string {
   return `error: ${err.code}${detail ? ` — ${detail}` : ""}`;
 }
 
+// "email (kind subject) staff quota N/day", or the email with a plain reason
+// when the account has no Grimoire grant yet — the login itself succeeded.
+async function describeIdentity(client: GrimoireClient): Promise<string> {
+  const email = await client.sessionEmail();
+  const who = email ?? "machine token";
+  try {
+    const me = await client.me();
+    return `${who} (${me.kind} ${me.subject})${me.is_staff ? "  staff" : ""}  quota ${me.quota_per_day}/day`;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 403) {
+      return `${who} — authenticated, but this account has no Grimoire access grant yet`;
+    }
+    throw err;
+  }
+}
+
 function describeJob(job: JobOut): string {
   const extra = [job.reason ? `reason: ${job.reason}` : "", job.source_id ? `source: ${job.source_id}` : ""]
     .filter(Boolean)
@@ -133,7 +149,7 @@ async function main(argv: string[]): Promise<number> {
       const launch = !args.bools.has("no-launch-browser");
       process.stderr.write(launch ? "Opening your browser to log in…\n" : "Login URL:\n");
       await browserLogin(loadGlobalConfig().apiBaseUrl, loginOpener(launch));
-      process.stdout.write("Logged in.\n");
+      process.stdout.write(`Logged in as ${await describeIdentity(new GrimoireClient())}\n`);
       return EXIT.ok;
     }
     case "logout":
@@ -174,10 +190,7 @@ async function main(argv: string[]): Promise<number> {
           process.stderr.write("not logged in — run `grimoire login`\n");
           return EXIT.authRequired;
         }
-        const me = await client.me();
-        process.stdout.write(
-          `${me.kind} ${me.subject}${me.is_staff ? "  staff" : ""}  quota ${me.quota_per_day}/day  via ${via}\n`,
-        );
+        process.stdout.write(`${await describeIdentity(client)}  via ${via}\n`);
         return EXIT.ok;
       }
       case "search": {

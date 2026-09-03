@@ -1,4 +1,4 @@
-import { gotrueToken, readMachineToken, readSession, storeSession } from "./auth.js";
+import { gotrueToken, readMachineToken, readSession, storeSession, tokenClaims } from "./auth.js";
 import { loadGlobalConfig } from "./config.js";
 import { ApiError } from "./errors.js";
 import { fetchWithTimeout } from "./http.js";
@@ -82,6 +82,13 @@ export class GrimoireClient {
 
   async refreshSession(): Promise<void> {
     await this.bearer();
+  }
+
+  // The login email from the session token; undefined for machine tokens.
+  async sessionEmail(): Promise<string | undefined> {
+    if (this.machineToken) return undefined;
+    const email = tokenClaims(await this.bearer()).email;
+    return typeof email === "string" ? email : undefined;
   }
 
   private async send(path: string, init: RequestInit, auth: boolean): Promise<Response> {
