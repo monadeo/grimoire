@@ -1,24 +1,22 @@
-import { readMachineToken, readRefreshToken } from "./auth.js";
+import { gotrueToken, readMachineToken, readSession, storeSession } from "./auth.js";
 import { loadGlobalConfig } from "./config.js";
 import { ApiError } from "./errors.js";
 import { fetchWithTimeout } from "./http.js";
-import type { components, operations } from "./generated/schema.js";
+import type { components } from "./generated/schema.js";
 
-export type SearchResultChunk = components["schemas"]["Chunk"];
-export type SourceCard = components["schemas"]["SourceCard"];
-export type ContextChunk = components["schemas"]["ContextChunk"];
-export type SearchRequest = operations["search"]["requestBody"]["content"]["application/json"];
-export type SearchResponse = operations["search"]["responses"][200]["content"]["application/json"];
-export type ListSourcesResponse =
-  operations["listSources"]["responses"][200]["content"]["application/json"];
-export type ListVersionsResponse =
-  operations["listVersions"]["responses"][200]["content"]["application/json"];
-export type ContextResponse =
-  operations["getDocumentContext"]["responses"][200]["content"]["application/json"];
-
-export type Job = components["schemas"]["Job"];
-export type SubmitSourceResponse =
-  operations["submitSource"]["responses"][201]["content"]["application/json"];
+type Schemas = components["schemas"];
+export type SearchRequest = Schemas["SearchRequest"];
+export type SearchResponse = Schemas["SearchResponse"];
+export type SearchResult = Schemas["SearchResult"];
+export type SourceSelector = Schemas["SourceSelector"];
+export type SourceOut = Schemas["SourceOut"];
+export type VersionsOut = Schemas["VersionsOut"];
+export type DocWindowOut = Schemas["DocWindowOut"];
+export type ReportIn = Schemas["ReportIn"];
+export type ReportOut = Schemas["ReportOut"];
+export type SubmissionIn = Schemas["SubmissionIn"];
+export type SubmitAccepted = Schemas["SubmitAccepted"];
+export type JobOut = Schemas["JobOut"];
 
 export { ApiError } from "./errors.js";
 
@@ -27,10 +25,18 @@ export interface ClientOptions {
   machineToken?: string;
 }
 
+const CODES: Record<number, string> = {
+  401: "unauthorized",
+  403: "forbidden",
+  404: "not_found",
+  422: "invalid_request",
+  429: "quota_exceeded",
+};
+
 export class GrimoireClient {
   private readonly baseUrl: string;
   private readonly machineToken?: string;
-  private cachedIdToken?: { token: string; expiresAt: number };
+  private cachedAccessToken?: { token: string; expiresAt: number };
   private refreshInFlight?: Promise<string>;
 
   constructor(opts: ClientOptions = {}) {
@@ -40,37 +46,35 @@ export class GrimoireClient {
 
   private async bearer(): Promise<string> {
     if (this.machineToken) return this.machineToken;
-    if (this.cachedIdToken && this.cachedIdToken.expiresAt > Date.now() + 60_000) {
-      return this.cachedIdToken.token;
+    if (this.cachedAccessToken && this.cachedAccessToken.expiresAt > Date.now() + 60_000) {
+      return this.cachedAccessToken.token;
     }
-    this.refreshInFlight ??= this.refreshIdToken().finally(() => {
+    this.refreshInFlight ??= this.refreshAccessToken().finally(() => {
       this.refreshInFlight = undefined;
     });
     return this.refreshInFlight;
   }
 
-  // Exchange the Firebase refresh token for a fresh ID token (silent refresh).
-  private async refreshIdToken(): Promise<string> {
-    const refresh = readRefreshToken();
-    if (!refresh) throw new ApiError(401, "not_logged_in", "Run `grimoire login`");
-    const res = await fetchWithTimeout(`${this.baseUrl}/auth/cli/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refresh }),
-    });
-    if (!res.ok) throw new ApiError(res.status, "refresh_failed", "Run `grimoire login`");
-    let payload: unknown;
+  // Exchange the stored refresh token for a fresh access token. GoTrue rotates
+  // refresh tokens, so the new one replaces the stored one every time.
+  private async refreshAccessToken(): Promise<string> {
+    const session = readSession();
+    if (!session) throw new ApiError(401, "not_logged_in", "Run `grimoire login`");
+    let tokens;
     try {
-      payload = await res.json();
-    } catch {
-      throw new ApiError(res.status, "refresh_failed", "Malformed refresh response");
+      tokens = await gotrueToken(session.supabase_url, session.supabase_anon_key, "refresh_token", {
+        refresh_token: session.refresh_token,
+      });
+    } catch (err) {
+      if (err instanceof ApiError) throw new ApiError(err.status, "refresh_failed", "Run `grimoire login`");
+      throw err;
     }
-    const { id_token, expires_in } = payload as { id_token?: unknown; expires_in?: unknown };
-    if (typeof id_token !== "string" || typeof expires_in !== "number") {
-      throw new ApiError(res.status, "refresh_failed", "Malformed refresh response");
-    }
-    this.cachedIdToken = { token: id_token, expiresAt: Date.now() + expires_in * 1000 };
-    return id_token;
+    storeSession({ ...session, refresh_token: tokens.refresh_token });
+    this.cachedAccessToken = {
+      token: tokens.access_token,
+      expiresAt: Date.now() + tokens.expires_in * 1000,
+    };
+    return tokens.access_token;
   }
 
   async refreshSession(): Promise<void> {
@@ -88,15 +92,16 @@ export class GrimoireClient {
 
   private async request<T>(path: string, init: RequestInit = {}, auth = true): Promise<T> {
     let res = await this.send(path, init, auth);
-    // A 401 despite a locally-unexpired ID token means it was revoked server-side:
-    // force one refresh and retry exactly once.
+    // A 401 despite a locally-unexpired access token means it was revoked
+    // server-side: force one refresh and retry exactly once.
     if (res.status === 401 && auth && !this.machineToken) {
-      this.cachedIdToken = undefined;
+      this.cachedAccessToken = undefined;
       res = await this.send(path, init, auth);
     }
     return this.parseResponse<T>(res);
   }
 
+  // FastAPI errors carry {"detail": "..."} (string) or {"detail": [...]} (422).
   private async parseResponse<T>(res: Response): Promise<T> {
     const isJson = res.headers.get("content-type")?.includes("json") ?? false;
     const text = await res.text();
@@ -111,47 +116,40 @@ export class GrimoireClient {
       }
     }
     if (!res.ok) {
-      const code =
-        parsed && typeof body === "object" && body !== null
-          ? ((body as { error?: string }).error ?? "error")
-          : "error";
-      throw new ApiError(res.status, code, parsed ? body : text);
+      const detail =
+        parsed && typeof body === "object" && body !== null ? (body as { detail?: unknown }).detail : undefined;
+      throw new ApiError(res.status, CODES[res.status] ?? "error", detail ?? (parsed ? body : text));
     }
     if (isJson) return (parsed ? body : {}) as T;
     return text as unknown as T;
   }
 
   search(input: SearchRequest): Promise<SearchResponse> {
-    return this.request<SearchResponse>("/v1/search", {
-      method: "POST",
-      body: JSON.stringify(input),
-    });
+    return this.request<SearchResponse>("/v1/search", { method: "POST", body: JSON.stringify(input) });
   }
 
-  listSources(q?: string): Promise<ListSourcesResponse> {
-    return this.request(`/v1/sources${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+  listSources(): Promise<SourceOut[]> {
+    return this.request<SourceOut[]>("/v1/sources");
   }
 
-  listVersions(sourceId: string): Promise<ListVersionsResponse> {
-    return this.request(`/v1/sources/${encodeURIComponent(sourceId)}/versions`);
+  listVersions(product: string): Promise<VersionsOut> {
+    return this.request<VersionsOut>(`/v1/sources/${encodeURIComponent(product)}/versions`);
   }
 
-  getContext(chunkId: string, window = 2): Promise<ContextResponse> {
-    return this.request(`/v1/documents/${encodeURIComponent(chunkId)}/context?window=${window}`);
+  getDoc(pointId: string, window = 2): Promise<DocWindowOut> {
+    return this.request<DocWindowOut>(`/v1/doc/${encodeURIComponent(pointId)}?window=${window}`);
   }
 
-  reportResult(chunkId: string, verdict: string, note?: string): Promise<unknown> {
-    return this.request("/v1/feedback", {
-      method: "POST",
-      body: JSON.stringify({ chunk_id: chunkId, verdict, note }),
-    });
+  reportResult(pointId: string, verdict: ReportIn["verdict"], note?: string): Promise<ReportOut> {
+    const body: ReportIn = { point_id: pointId, verdict, ...(note ? { note } : {}) };
+    return this.request<ReportOut>("/v1/report", { method: "POST", body: JSON.stringify(body) });
   }
 
-  submitSource(body: Record<string, unknown>): Promise<SubmitSourceResponse> {
-    return this.request("/v1/sources", { method: "POST", body: JSON.stringify(body) });
+  submitSource(body: SubmissionIn): Promise<SubmitAccepted> {
+    return this.request<SubmitAccepted>("/v1/sources", { method: "POST", body: JSON.stringify(body) });
   }
 
-  getJob(jobId: string): Promise<Job> {
-    return this.request(`/v1/jobs/${encodeURIComponent(jobId)}`);
+  getJob(jobId: string): Promise<JobOut> {
+    return this.request<JobOut>(`/v1/jobs/${encodeURIComponent(jobId)}`);
   }
 }

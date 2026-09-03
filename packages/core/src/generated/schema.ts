@@ -4,17 +4,85 @@
  */
 
 export interface paths {
-    "/health": {
+    "/healthz": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Unauthenticated liveness probe */
-        get: operations["getHealth"];
+        /** Healthz */
+        get: operations["healthz_healthz_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Auth Config */
+        get: operations["auth_config_v1_auth_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/doc/{point_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Doc */
+        get: operations["get_doc_v1_doc__point_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Job */
+        get: operations["get_job_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report Result */
+        post: operations["report_result_v1_report_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -30,8 +98,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hybrid documentation search across up to 5 source@version targets */
-        post: operations["search"];
+        /** Search */
+        post: operations["search_v1_search_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -45,26 +113,26 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List accessible sources (public + caller tenant) */
-        get: operations["listSources"];
+        /** List Sources */
+        get: operations["list_sources_v1_sources_get"];
         put?: never;
-        /** Submit a documentation source for ingestion */
-        post: operations["submitSource"];
+        /** Submit Source */
+        post: operations["submit_source_v1_sources_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/sources/{sourceId}/versions": {
+    "/v1/sources/{product}/versions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** All versions of a source */
-        get: operations["listVersions"];
+        /** List Versions */
+        get: operations["list_versions_v1_sources__product__versions_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -73,15 +141,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/documents/{chunkId}/context": {
+    "/v1/staff/jobs/{job_id}/approve": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Chunk plus neighbors in the same document */
-        get: operations["getDocumentContext"];
+        get?: never;
+        put?: never;
+        /** Approve Job */
+        post: operations["approve_job_v1_staff_jobs__job_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/staff/jobs/{job_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Job */
+        post: operations["reject_job_v1_staff_jobs__job_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/staff/rerank-eval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rerank Eval */
+        post: operations["rerank_eval_v1_staff_rerank_eval_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/staff/review-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Queue */
+        get: operations["review_queue_v1_staff_review_queue_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -90,41 +209,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/catalog": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Public source catalog (unauthenticated, cached) */
-        get: operations["getCatalog"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/catalog/{sourceId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** One public source card (unauthenticated, cached) */
-        get: operations["getCatalogSource"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/feedback": {
+    "/v1/staff/sources/{source_id}/recrawl": {
         parameters: {
             query?: never;
             header?: never;
@@ -133,66 +218,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Report a retrieved chunk as helpful, incorrect, or outdated */
-        post: operations["reportResult"];
+        /** Recrawl Source */
+        post: operations["recrawl_source_v1_staff_sources__source_id__recrawl_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/jobs/{jobId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Ingestion job status (SSE with Accept text/event-stream) */
-        get: operations["getJob"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/jobs/{jobId}/errors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Per-document errors of an ingestion job */
-        get: operations["getJobErrors"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/jobs/{jobId}/quarantine": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Tenant self-review of private quarantined chunks (admin/owner) */
-        get: operations["listQuarantinedChunks"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/jobs/{jobId}/quarantine/{chunkId}/release": {
+    "/v1/staff/tokens": {
         parameters: {
             query?: never;
             header?: never;
@@ -201,377 +235,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Release a quarantined private chunk into the index */
-        post: operations["releaseQuarantinedChunk"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/jobs/{jobId}/quarantine/{chunkId}/delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Permanently discard a quarantined private chunk */
-        post: operations["deleteQuarantinedChunk"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tickets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Tenant's support tickets */
-        get: operations["listTickets"];
-        put?: never;
-        /** Open a re-ingest or escalation ticket */
-        post: operations["openTicket"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tickets/{ticketId}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Messages on a ticket */
-        get: operations["listTicketMessages"];
-        put?: never;
-        /** Add a message to a ticket */
-        post: operations["postTicketMessage"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tenants/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Caller's tenant profile */
-        get: operations["getTenant"];
-        put?: never;
-        post?: never;
-        /** Request tenant deletion (owner; 30-day erasure cascade) */
-        delete: operations["deleteTenant"];
-        options?: never;
-        head?: never;
-        /** Update tenant name / overage settings (owner) */
-        patch: operations["updateTenant"];
-        trace?: never;
-    };
-    "/v1/tenants/me/usage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Current-month usage totals */
-        get: operations["getTenantUsage"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tenants/me/machine-tokens": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List machine tokens (admin/owner, paid plan) */
-        get: operations["listMachineTokens"];
-        put?: never;
-        /** Create a machine token (shown once) */
-        post: operations["createMachineToken"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tenants/me/machine-tokens/{tokenId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Revoke a machine token */
-        delete: operations["revokeMachineToken"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tenants/me/webhook-secret": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Rotate the tenant webhook HMAC secret (shown once) */
-        post: operations["rotateWebhookSecret"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tenants/me/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Tenant members */
-        get: operations["listMembers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tenants/me/members/{userId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove a member (admin/owner; owner cannot be removed) */
-        delete: operations["removeMember"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tenants/me/invites": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Open invites */
-        get: operations["listInvites"];
-        put?: never;
-        /** Create a shareable invite link (token shown once) */
-        post: operations["createInvite"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/tenants/me/invites/{inviteId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Revoke an invite */
-        delete: operations["revokeInvite"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/invites/redeem": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Redeem an invite token (single use, seat-limited) */
-        post: operations["redeemInvite"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/users/bootstrap": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Idempotently create the caller's user record and implicit free tenant
-         * @description First-login step (data-model rule "one tenant per user", server-side writes only). Safe to call on every sign-in; returns the existing tenant afterwards.
-         */
-        post: operations["bootstrapUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/billing/checkout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Start a Team subscription (Stripe Checkout session; owner only) */
-        post: operations["createCheckout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/billing/portal": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Open the Stripe customer portal (owner only) */
-        post: operations["createBillingPortal"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/webhooks/stripe": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Stripe events (signature-verified with the webhook secret; not a client API) */
-        post: operations["stripeWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/cli/start": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Begin the CLI browser login (hosted sign-in page) */
-        get: operations["cliAuthStart"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/cli/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Hosted page posts the signed-in user's refresh token against the code */
-        post: operations["cliAuthComplete"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/cli/exchange": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** CLI exchanges the one-time code + PKCE verifier for the refresh token */
-        post: operations["cliAuthExchange"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/cli/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Exchange the stored refresh token for a short-lived ID token
-         * @description Silent-refresh endpoint the clients call before every authenticated request when the cached ID token expired. Ships with the Phase 6 auth work (the client contract is fixed here first — contract-first rule).
-         */
-        post: operations["cliAuthRefresh"];
+        /** Mint Token */
+        post: operations["mint_token_v1_staff_tokens_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -582,97 +247,326 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        SourceCard: {
-            source_id?: string;
-            display_name?: string;
-            /** @enum {string} */
-            visibility?: "public" | "private";
-            latest_version?: string | null;
-            /** @description Precise product version of the latest snapshot (e.g. 16.2.10), when known */
-            latest_semver?: string | null;
-            latest_pages?: number | null;
-            latest_chunks?: number | null;
-            latest_crawled_at?: string | null;
-            languages?: string[];
-            origin_url?: string | null;
+        /** AuthConfigOut */
+        AuthConfigOut: {
+            /** Supabase Anon Key */
+            supabase_anon_key: string;
+            /** Supabase Url */
+            supabase_url: string;
         };
-        Chunk: {
-            chunk_id: string;
-            source: string;
+        /** Candidate */
+        Candidate: {
+            /** Body Hash */
+            body_hash: string;
+            /** Fused Rank */
+            fused_rank: number;
+            /** Heading Path */
+            heading_path: string[];
+            /** Point Id */
+            point_id: string;
+            /** Product */
+            product: string;
+            /** Rerank Score */
+            rerank_score: number | null;
+            /** Source Url */
+            source_url: string;
+            /** Version */
             version: string;
-            ingested_at?: string;
-            score: number;
-            heading_path?: string[];
+        };
+        /** DocWindowOut */
+        DocWindowOut: {
+            /** Heading Path */
+            heading_path: string[];
+            /** Ordinals */
+            ordinals: number[];
+            /** Point Id */
+            point_id: string;
+            /** Product */
+            product: string;
+            /** Source Url */
+            source_url: string;
+            /** Text */
             text: string;
-            token_count: number;
-            origin_url: string;
+            /** Title */
+            title: string | null;
+            /** Version */
+            version: string;
         };
-        ContextChunk: {
-            chunk_id?: string;
-            text?: string;
-            heading_path?: string[];
-            origin_url?: string;
-            token_count?: number;
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
         };
-        Job: {
-            job_id?: string;
-            source_id?: string;
-            version_id?: string;
-            /** @enum {string} */
-            status?: "validating" | "pending_review" | "fetching" | "parsing" | "indexing" | "publishing" | "complete" | "failed" | "rejected";
-            counters?: {
-                [key: string]: number;
+        /** HealthResponse */
+        HealthResponse: {
+            /** Config Version */
+            config_version: string;
+            /** Status */
+            status: string;
+        };
+        /** JobOut */
+        JobOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Reason */
+            reason: string | null;
+            /** Source Id */
+            source_id: string | null;
+            /** State */
+            state: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ProbeConfig */
+        ProbeConfig: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "npm" | "pypi" | "github" | "page";
+            /** Package */
+            package?: string | null;
+            /** Pattern */
+            pattern?: string | null;
+            /** Prefix */
+            prefix?: string | null;
+            /** Repo */
+            repo?: string | null;
+            /** Tag Pattern */
+            tag_pattern?: string | null;
+            /** Url */
+            url?: string | null;
+        };
+        /** RejectIn */
+        RejectIn: {
+            /** Reason */
+            reason: string;
+        };
+        /** ReportIn */
+        ReportIn: {
+            /** Note */
+            note?: string | null;
+            /** Point Id */
+            point_id: string;
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "helpful" | "incorrect" | "outdated";
+        };
+        /** ReportOut */
+        ReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** RerankEvalIn */
+        RerankEvalIn: {
+            /** Point Ids */
+            point_ids: string[];
+            /** Query */
+            query: string;
+        };
+        /** RerankEvalOut */
+        RerankEvalOut: {
+            /** Scores */
+            scores: components["schemas"]["RerankScore"][];
+        };
+        /** RerankScore */
+        RerankScore: {
+            /** Point Id */
+            point_id: string;
+            /** Score */
+            score: number;
+        };
+        /** SearchRequest */
+        SearchRequest: {
+            /**
+             * Debug
+             * @default false
+             */
+            debug: boolean;
+            /** Query */
+            query: string;
+            /** Sources */
+            sources: components["schemas"]["SourceSelector"][];
+        };
+        /** SearchResponse */
+        SearchResponse: {
+            /** Candidates */
+            candidates: components["schemas"]["Candidate"][] | null;
+            /** Config Version */
+            config_version: string;
+            /** Latency Ms */
+            latency_ms: number;
+            /** Resolved Versions */
+            resolved_versions: {
+                [key: string]: string;
             };
+            /** Results */
+            results: components["schemas"]["SearchResult"][];
+            /** Retrievals Remaining */
+            retrievals_remaining: number;
+            /** Untrusted Content Notice */
+            untrusted_content_notice: string;
         };
-        Ticket: {
-            ticket_id?: string;
-            /** @enum {string} */
-            type?: "reingest" | "escalation";
-            source_id?: string;
-            reason?: string;
-            status?: string;
+        /** SearchResult */
+        SearchResult: {
+            /** Heading Id */
+            heading_id: string | null;
+            /** Heading Path */
+            heading_path: string[];
+            /** Ordinal */
+            ordinal: number;
+            /** Point Id */
+            point_id: string;
+            /** Product */
+            product: string;
+            /** Rank */
+            rank: number;
+            /** Score */
+            score: number;
+            /** Source Url */
+            source_url: string;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string | null;
+            /** Version */
+            version: string;
         };
-        Tenant: {
-            tenant_id?: string;
-            name?: string;
-            /** @enum {string} */
-            plan?: "free" | "team";
-            seat_limit?: number;
-            overage?: {
-                enabled?: boolean;
-                monthly_cap_usd?: number;
-            };
-            billing_state?: {
-                suspended?: boolean;
-                grace_until?: string;
-            };
+        /** SourceOut */
+        SourceOut: {
+            /** Base Url */
+            base_url: string;
+            /** Product */
+            product: string;
+            /** Status */
+            status: string;
+            /** Versions */
+            versions: string[];
+        };
+        /** SourceSelector */
+        SourceSelector: {
+            /** Product */
+            product: string;
+            /** Version */
+            version?: string | null;
+        };
+        /** SubmissionIn */
+        SubmissionIn: {
+            /**
+             * Exclude Patterns
+             * @default []
+             */
+            exclude_patterns: string[];
+            /**
+             * Include Patterns
+             * @default []
+             */
+            include_patterns: string[];
+            probe?: components["schemas"]["ProbeConfig"] | null;
+            /** Product */
+            product: string;
+            /** Url */
+            url: string;
+            version_rule: components["schemas"]["VersionRule"];
+            /** Version Scheme */
+            version_scheme?: ("semver" | "date" | "rolling") | null;
+        };
+        /** SubmitAccepted */
+        SubmitAccepted: {
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+        };
+        /** TokenMintIn */
+        TokenMintIn: {
+            /** Name */
+            name: string;
+            /** Quota Per Day */
+            quota_per_day: number;
+        };
+        /** TokenMinted */
+        TokenMinted: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Quota Per Day */
+            quota_per_day: number;
+            /** Token */
+            token: string;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
+        /** VersionOut */
+        VersionOut: {
+            /** Chunk Count */
+            chunk_count: number;
+            /** Version */
+            version: string;
+        };
+        /**
+         * VersionRule
+         * @description How a page's version is read. `fixed` with no value means the release
+         *     probe names each snapshot; `rolling` is one unversioned bucket.
+         */
+        VersionRule: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "path_segment" | "subdomain" | "fixed" | "rolling";
+            /** Pattern */
+            pattern?: string | null;
+            /** Segment Index */
+            segment_index?: number | null;
+            /** Value */
+            value?: string | null;
+        };
+        /** VersionsOut */
+        VersionsOut: {
+            /** Latest */
+            latest: string | null;
+            /** Product */
+            product: string;
+            /** Versions */
+            versions: components["schemas"]["VersionOut"][];
         };
     };
-    responses: {
-        /** @description Success */
-        Ok: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": {
-                    ok?: boolean;
-                };
-            };
-        };
-        /** @description Structured error */
-        Error: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": {
-                    error: string;
-                    message?: string;
-                };
-            };
-        };
-    };
+    responses: never;
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -680,7 +574,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getHealth: {
+    healthz_healthz_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -689,264 +583,102 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Service is up */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @constant */
-                        status: "ok";
-                        revision?: string;
-                    };
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
         };
     };
-    search: {
+    auth_config_v1_auth_config_get: {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    query: string;
-                    sources: {
-                        source: string;
-                        /** @default latest */
-                        version?: string;
-                    }[];
-                    language?: string;
-                    /** @default 8 */
-                    top_k?: number;
-                    /** @default 100 */
-                    candidates_per_source?: number;
-                    max_response_tokens?: number;
-                    /**
-                     * @description Also return the fused pre-rerank candidate id list (quality-harness instrumentation; candidate-stage recall is scored against it).
-                     * @default false
-                     */
-                    include_candidate_ids?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Ranked, attributed chunks */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        results: components["schemas"]["Chunk"][];
-                        /** @enum {string} */
-                        confidence: "strong" | "weak";
-                        reranked: boolean;
-                        /**
-                         * @description used = cross-encoder ordered the results; degraded = reranker configured but unavailable, fused order served; disabled = no reranker in the retrieval config
-                         * @enum {string}
-                         */
-                        rerank_status?: "used" | "degraded" | "disabled";
-                        resolved_versions: {
-                            [key: string]: string;
-                        };
-                        usage: {
-                            retrievals_remaining?: number | null;
-                        };
-                        candidate_ids?: string[];
-                    };
-                };
-            };
-            400: components["responses"]["Error"];
-            401: components["responses"]["Error"];
-            403: components["responses"]["Error"];
-            404: components["responses"]["Error"];
-            429: components["responses"]["Error"];
-            503: components["responses"]["Error"];
-        };
-    };
-    listSources: {
-        parameters: {
-            query?: {
-                q?: string;
-            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Source cards */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        sources?: components["schemas"]["SourceCard"][];
-                    };
+                    "application/json": components["schemas"]["AuthConfigOut"];
                 };
             };
-            401: components["responses"]["Error"];
         };
     };
-    submitSource: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** Format: uri */
-                    url?: string;
-                    source_id?: string;
-                    /** @description GCS upload reference for private zip submissions (requires source_id) */
-                    upload_ref?: string;
-                    version?: string;
-                    /**
-                     * @default public
-                     * @enum {string}
-                     */
-                    visibility?: "public" | "private";
-                    /** Format: uri */
-                    webhook_url?: string;
-                    scrape_config?: Record<string, never>;
-                };
-            };
-        };
-        responses: {
-            /** @description Ingestion job created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        job_id: string;
-                        source_id: string;
-                        version_id: string;
-                    };
-                };
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Error"];
-            409: components["responses"]["Error"];
-            429: components["responses"]["Error"];
-            503: components["responses"]["Error"];
-        };
-    };
-    listVersions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                sourceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Versions */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        versions?: {
-                            version_id?: string;
-                            semver?: string | null;
-                            ingested_at?: string;
-                            status?: string;
-                            is_latest?: boolean;
-                            chunk_count?: number;
-                        }[];
-                    };
-                };
-            };
-            404: components["responses"]["Error"];
-        };
-    };
-    getDocumentContext: {
+    get_doc_v1_doc__point_id__get: {
         parameters: {
             query?: {
                 window?: number;
             };
             header?: never;
             path: {
-                chunkId: string;
+                point_id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Neighboring chunks */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        chunks?: components["schemas"]["ContextChunk"][];
-                    };
+                    "application/json": components["schemas"]["DocWindowOut"];
                 };
             };
-            404: components["responses"]["Error"];
-        };
-    };
-    getCatalog: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Public sources */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        sources?: components["schemas"]["SourceCard"][];
-                    };
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
-    getCatalogSource: {
+    get_job_v1_jobs__job_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                sourceId: string;
+                job_id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Source card */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SourceCard"];
+                    "application/json": components["schemas"]["JobOut"];
                 };
             };
-            404: components["responses"]["Error"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    reportResult: {
+    report_result_v1_report_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -955,163 +687,31 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    chunk_id: string;
-                    /** @enum {string} */
-                    verdict: "helpful" | "incorrect" | "outdated";
-                    note?: string;
-                };
+                "application/json": components["schemas"]["ReportIn"];
             };
         };
         responses: {
-            /** @description Recorded */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Error"];
-            404: components["responses"]["Error"];
-            429: components["responses"]["Error"];
-        };
-    };
-    getJob: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                jobId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Job document (or SSE stream) */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Job"];
+                    "application/json": components["schemas"]["ReportOut"];
                 };
             };
-            404: components["responses"]["Error"];
-        };
-    };
-    getJobErrors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                jobId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Errors */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        errors?: {
-                            stage?: string;
-                            document_url?: string;
-                            message?: string;
-                        }[];
-                    };
-                };
-            };
-            404: components["responses"]["Error"];
-        };
-    };
-    listQuarantinedChunks: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                jobId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Quarantined chunks awaiting tenant review */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        chunks?: {
-                            chunk_id?: string;
-                            text?: string;
-                            heading_path?: string[];
-                        }[];
-                    };
-                };
-            };
-            404: components["responses"]["Error"];
-        };
-    };
-    releaseQuarantinedChunk: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                jobId: string;
-                chunkId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["Ok"];
-            404: components["responses"]["Error"];
-        };
-    };
-    deleteQuarantinedChunk: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                jobId: string;
-                chunkId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["Ok"];
-            404: components["responses"]["Error"];
-        };
-    };
-    listTickets: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Tickets */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        tickets?: components["schemas"]["Ticket"][];
-                    };
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
-    openTicket: {
+    search_v1_search_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1120,78 +720,31 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    /** @enum {string} */
-                    type: "reingest" | "escalation";
-                    source_id: string;
-                    reason: string;
-                };
+                "application/json": components["schemas"]["SearchRequest"];
             };
         };
         responses: {
-            /** @description Ticket created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        ticket_id?: string;
-                    };
-                };
-            };
-            400: components["responses"]["Error"];
-        };
-    };
-    listTicketMessages: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                ticketId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Messages */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-            404: components["responses"]["Error"];
-        };
-    };
-    postTicketMessage: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                ticketId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    body: string;
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
                 };
             };
-        };
-        responses: {
-            /** @description Message added */
-            201: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
-            404: components["responses"]["Error"];
         };
     };
-    getTenant: {
+    list_sources_v1_sources_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1200,19 +753,18 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Tenant */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Tenant"];
+                    "application/json": components["schemas"]["SourceOut"][];
                 };
             };
-            404: components["responses"]["Error"];
         };
     };
-    deleteTenant: {
+    submit_source_v1_sources_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1221,250 +773,128 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    /** @description Must equal the tenant id */
-                    confirm: string;
-                };
+                "application/json": components["schemas"]["SubmissionIn"];
             };
         };
         responses: {
-            /** @description Erasure scheduled */
+            /** @description Successful Response */
             202: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Error"];
-        };
-    };
-    updateTenant: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    name?: string;
-                    overage?: {
-                        enabled?: boolean;
-                        monthly_cap_usd?: number;
-                    };
+                content: {
+                    "application/json": components["schemas"]["SubmitAccepted"];
                 };
             };
-        };
-        responses: {
-            200: components["responses"]["Ok"];
-            400: components["responses"]["Error"];
-            403: components["responses"]["Error"];
-        };
-    };
-    getTenantUsage: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Usage */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        month?: string;
-                        usage?: {
-                            [key: string]: number;
-                        };
-                    };
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
-    listMachineTokens: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Tokens (hashes never returned) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            403: components["responses"]["Error"];
-        };
-    };
-    createMachineToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    label: string;
-                    scopes: ("search" | "ingest")[];
-                };
-            };
-        };
-        responses: {
-            /** @description Token created — the raw token is returned exactly once */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Error"];
-        };
-    };
-    revokeMachineToken: {
+    list_versions_v1_sources__product__versions_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                tokenId: string;
+                product: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Ok"];
-            403: components["responses"]["Error"];
-        };
-    };
-    rotateWebhookSecret: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description New secret */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VersionsOut"];
+                };
             };
-            403: components["responses"]["Error"];
-        };
-    };
-    listMembers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Members */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
-    removeMember: {
+    approve_job_v1_staff_jobs__job_id__approve_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                userId: string;
+                job_id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Ok"];
-            400: components["responses"]["Error"];
-            403: components["responses"]["Error"];
-        };
-    };
-    listInvites: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Invites */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-        };
-    };
-    createInvite: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /**
-                     * @default member
-                     * @enum {string}
-                     */
-                    role?: "member" | "admin";
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
                 };
             };
-        };
-        responses: {
-            /** @description Invite created */
-            201: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
-            400: components["responses"]["Error"];
-            403: components["responses"]["Error"];
         };
     };
-    revokeInvite: {
+    reject_job_v1_staff_jobs__job_id__reject_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                inviteId: string;
+                job_id: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectIn"];
+            };
+        };
         responses: {
-            200: components["responses"]["Ok"];
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    redeemInvite: {
+    rerank_eval_v1_staff_rerank_eval_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1473,25 +903,31 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    token: string;
-                };
+                "application/json": components["schemas"]["RerankEvalIn"];
             };
         };
         responses: {
-            /** @description Joined */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RerankEvalOut"];
+                };
             };
-            404: components["responses"]["Error"];
-            409: components["responses"]["Error"];
-            410: components["responses"]["Error"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    bootstrapUser: {
+    review_queue_v1_staff_review_queue_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1500,136 +936,49 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The caller's tenant */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        tenant_id: string;
-                        /** @enum {string} */
-                        role: "owner" | "admin" | "member";
-                        created: boolean;
-                    };
+                    "application/json": components["schemas"]["JobOut"][];
                 };
             };
-            401: components["responses"]["Error"];
-            403: components["responses"]["Error"];
         };
     };
-    createCheckout: {
+    recrawl_source_v1_staff_sources__source_id__recrawl_post: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /**
-                     * @default team
-                     * @enum {string}
-                     */
-                    plan?: "solo" | "team";
-                    /** @description Team only; Solo is always a single seat. */
-                    seats?: number;
-                };
+            path: {
+                source_id: string;
             };
-        };
-        responses: {
-            /** @description Hosted checkout session */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** Format: uri */
-                        url: string;
-                    };
-                };
-            };
-            400: components["responses"]["Error"];
-            401: components["responses"]["Error"];
-            403: components["responses"]["Error"];
-            409: components["responses"]["Error"];
-        };
-    };
-    createBillingPortal: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Hosted portal session */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** Format: uri */
-                        url: string;
-                    };
+                    "application/json": components["schemas"]["JobOut"];
                 };
             };
-            401: components["responses"]["Error"];
-            403: components["responses"]["Error"];
-            409: components["responses"]["Error"];
-        };
-    };
-    stripeWebhook: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Event accepted */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-            400: components["responses"]["Error"];
-        };
-    };
-    cliAuthStart: {
-        parameters: {
-            query: {
-                /** @description PKCE S256 challenge */
-                code_challenge: string;
-                code_challenge_method?: "S256";
-                /** @description Opaque CSRF token the sign-in page echoes to the loopback callback */
-                state?: string;
-                /** @description CLI loopback callback — must match http://127.0.0.1:<port>/callback */
-                redirect_uri: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Hosted sign-in page (HTML) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
-                content?: never;
             };
-            400: components["responses"]["Error"];
         };
     };
-    cliAuthComplete: {
+    mint_token_v1_staff_tokens_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1638,93 +987,28 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    code: string;
-                    refresh_token: string;
-                    id_token: string;
-                };
+                "application/json": components["schemas"]["TokenMintIn"];
             };
         };
         responses: {
-            200: components["responses"]["Ok"];
-            400: components["responses"]["Error"];
-            401: components["responses"]["Error"];
-            404: components["responses"]["Error"];
-        };
-    };
-    cliAuthExchange: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    code: string;
-                    code_verifier: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Refresh token (one-shot; the code is consumed) */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        refresh_token: string;
-                    };
+                    "application/json": components["schemas"]["TokenMinted"];
                 };
             };
-            400: components["responses"]["Error"];
-            404: components["responses"]["Error"];
-            /** @description Authorization pending — the user has not completed sign-in yet */
-            428: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @constant */
-                        error?: "authorization_pending";
-                    };
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-        };
-    };
-    cliAuthRefresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    refresh_token: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Fresh ID token */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id_token: string;
-                        /** @description Seconds until expiry */
-                        expires_in: number;
-                    };
-                };
-            };
-            400: components["responses"]["Error"];
-            401: components["responses"]["Error"];
         };
     };
 }

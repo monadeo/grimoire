@@ -31,7 +31,7 @@ export const CONFIG_KEYS: Record<string, KeySpec> = {
     describe: `API origin without a path (default ${DEFAULT_API_BASE}; env GRIMOIRE_API_URL overrides)`,
     parse: (raw) => {
       if (!/^https?:\/\/[^/]+$/.test(raw)) {
-        throw new UsageError("api-url must be a bare origin, e.g. https://grimoire-api.monadeo.com");
+        throw new UsageError("api-url must be a bare origin, e.g. https://api.example.com");
       }
       return raw;
     },
@@ -41,25 +41,12 @@ export const CONFIG_KEYS: Record<string, KeySpec> = {
     describe: "hours between CLI update checks (default 24, 0 disables)",
     parse: (raw) => intInRange("update-check-hours", raw, 0),
   },
-  language: {
-    prop: "defaultLanguage",
-    describe: "default search language filter",
-    parse: (raw) => {
-      if (!raw) throw new UsageError("language must be non-empty");
-      return raw;
-    },
-  },
-  "max-response-tokens": {
-    prop: "maxResponseTokens",
-    describe: "search response token budget",
-    parse: (raw) => intInRange("max-response-tokens", raw, 1),
-  },
 };
 
 // auth-token is a secret and lives in a 0600 file, not the world-readable
 // config.json — so it is handled outside the CONFIG_KEYS (GlobalConfig) framework.
 const AUTH_TOKEN_KEY = "auth-token";
-const MACHINE_TOKEN_RE = /^mt_[0-9a-f]{64}$/;
+const MACHINE_TOKEN_RE = /^mt_[A-Za-z0-9_-]{32,}$/;
 const USAGE =
   "Usage: grimoire config [<key>] [<value>] [--unset]  (keys: " +
   [...Object.keys(CONFIG_KEYS), AUTH_TOKEN_KEY].join(", ") +
@@ -91,7 +78,7 @@ export function runConfig(args: ParsedArgs): number {
       return EXIT.ok;
     }
     if (!MACHINE_TOKEN_RE.test(value)) {
-      throw new UsageError("auth-token must be a machine token, e.g. mt_<64 hex chars>");
+      throw new UsageError("auth-token must be a machine token starting with mt_");
     }
     storeMachineToken(value);
     process.stdout.write(`${AUTH_TOKEN_KEY} set\n`);
