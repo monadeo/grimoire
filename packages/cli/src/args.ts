@@ -7,7 +7,17 @@ export interface ParsedArgs {
 
 export class UsageError extends Error {}
 
-const BOOL_FLAGS = new Set(["json", "compact", "watch", "names", "http", "unset", "rolling", "debug"]);
+const BOOL_FLAGS = new Set([
+  "json",
+  "compact",
+  "watch",
+  "names",
+  "http",
+  "unset",
+  "rolling",
+  "debug",
+  "no-launch-browser",
+]);
 
 export function parseArgs(
   argv: string[],

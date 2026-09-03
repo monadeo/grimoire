@@ -23,13 +23,22 @@ import { runUpdate } from "./commands/update.js";
 import { submissionFromArgs } from "./commands/ingest.js";
 import { notifyIfOutdated, refreshUpdateState } from "./updatecheck.js";
 
-function openBrowser(url: string): void {
-  const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-  try {
-    execFileSync(cmd, [url], { stdio: "ignore" });
-  } catch {
-    process.stdout.write(`Open this URL to log in:\n${url}\n`);
-  }
+// The authorization URL is always printed so a user on a headless or remote
+// machine can open it elsewhere; the browser launch is the default convenience.
+function loginOpener(launchBrowser: boolean): (url: string) => void {
+  return (url: string): void => {
+    process.stdout.write(`${url}\n`);
+    if (!launchBrowser) {
+      process.stderr.write("Open the URL above in a browser to log in; waiting for the callback…\n");
+      return;
+    }
+    const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+    try {
+      execFileSync(cmd, [url], { stdio: "ignore" });
+    } catch {
+      process.stderr.write("Could not open a browser; open the URL above manually.\n");
+    }
+  };
 }
 
 function parseSourceFlags(values: string[] | undefined): SourcePin[] {
@@ -50,7 +59,7 @@ const VERSION = typeof __GRIMOIRE_VERSION__ === "string" ? __GRIMOIRE_VERSION__ 
 
 const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
 
-  grimoire login | logout | whoami
+  grimoire login [--no-launch-browser] | logout | whoami
   grimoire setup <claude-code|cursor|windsurf|codex>
   grimoire init
   grimoire search "<query>" [-s nextjs@15 -s react] [--json|--compact] [--debug]
@@ -76,7 +85,7 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
 // Canonical flag names each command accepts; parseArgs rejects anything else.
 const COMMAND_FLAGS: Record<string, readonly string[]> = {
   version: [], "--version": [], "-v": [],
-  login: [], logout: [], setup: [], init: [], whoami: [],
+  login: ["no-launch-browser"], logout: [], setup: [], init: [], whoami: [],
   help: [], "--help": [], "-h": [],
   mcp: ["http"],
   config: ["unset"],
@@ -120,8 +129,9 @@ async function main(argv: string[]): Promise<number> {
       process.stdout.write(`${VERSION}\n`);
       return EXIT.ok;
     case "login": {
-      process.stderr.write("Opening your browser to log in…\n");
-      await browserLogin(loadGlobalConfig().apiBaseUrl, openBrowser);
+      const launch = !args.bools.has("no-launch-browser");
+      process.stderr.write(launch ? "Opening your browser to log in…\n" : "Login URL:\n");
+      await browserLogin(loadGlobalConfig().apiBaseUrl, loginOpener(launch));
       process.stdout.write("Logged in.\n");
       return EXIT.ok;
     }
