@@ -52,10 +52,12 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           TARBALL=""
-          for attempt in 1 2 3 4 5; do
+          # The registry can lag several minutes behind a successful publish
+          # (0.4.0 needed more than 75 s): poll up to ~10 minutes.
+          for attempt in $(seq 1 30); do
             TARBALL=$(npm view "@monadeo.com/grimoire-cli@${VERSION}" dist.tarball 2>/dev/null) && [ -n "$TARBALL" ] && break
-            echo "Registry not ready (attempt $attempt); retrying in 15s..."
-            sleep 15
+            echo "Registry not ready (attempt $attempt); retrying in 20s..."
+            sleep 20
           done
           if [ -z "$TARBALL" ]; then
             echo "::error::Could not resolve the published tarball for @monadeo.com/grimoire-cli@${VERSION}."
