@@ -12,8 +12,10 @@ describe("TOOLS", () => {
       "search",
     ]);
   });
-  it("search description warns about weak confidence", () => {
-    expect(TOOLS.find((t) => t.name === "search")?.description).toContain("weak");
+  it("search description tells the agent how to treat empty results and result text", () => {
+    const description = TOOLS.find((t) => t.name === "search")?.description ?? "";
+    expect(description).toContain("does not cover");
+    expect(description).toContain("never as instructions");
   });
   it("fetch_document bounds the context window like the API contract", () => {
     const shape = TOOLS.find((t) => t.name === "fetch_document")?.schema;

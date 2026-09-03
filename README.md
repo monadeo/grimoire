@@ -17,7 +17,7 @@ brew install grimoire
 # or npm
 npm install -g @monadeo.com/grimoire-cli
 
-grimoire login
+grimoire login                           # browser single sign-on (PKCE)
 grimoire setup claude-code               # wire the MCP server into your agent
 ```
 
@@ -25,7 +25,7 @@ grimoire setup claude-code               # wire the MCP server into your agent
 
 | Package | What |
 |---|---|
-| `@monadeo.com/grimoire-core` | Typed API client, auth broker login, config (`.grimoire.json`) |
+| `@monadeo.com/grimoire-core` | Typed API client, Supabase Auth login, config (`.grimoire.json`) |
 | `@monadeo.com/grimoire-cli` | `grimoire` command — search, sources, ingest, setup, init |
 | `@monadeo.com/grimoire-mcp` | MCP server (`npx @monadeo.com/grimoire-mcp`), stdio + streamable HTTP |
 

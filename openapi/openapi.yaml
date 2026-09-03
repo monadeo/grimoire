@@ -1,864 +1,1126 @@
-openapi: 3.1.0
+components:
+  schemas:
+    AuthConfigOut:
+      properties:
+        oauth_provider:
+          title: Oauth Provider
+          type: string
+        redirect_urls:
+          items:
+            type: string
+          title: Redirect Urls
+          type: array
+        supabase_anon_key:
+          title: Supabase Anon Key
+          type: string
+        supabase_url:
+          title: Supabase Url
+          type: string
+      required:
+      - supabase_url
+      - supabase_anon_key
+      - oauth_provider
+      - redirect_urls
+      title: AuthConfigOut
+      type: object
+    Candidate:
+      properties:
+        body_hash:
+          title: Body Hash
+          type: string
+        fused_rank:
+          title: Fused Rank
+          type: integer
+        heading_path:
+          items:
+            type: string
+          title: Heading Path
+          type: array
+        point_id:
+          title: Point Id
+          type: string
+        product:
+          title: Product
+          type: string
+        rerank_score:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rerank Score
+        source_url:
+          title: Source Url
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - point_id
+      - product
+      - version
+      - source_url
+      - heading_path
+      - body_hash
+      - fused_rank
+      - rerank_score
+      title: Candidate
+      type: object
+    DocWindowOut:
+      properties:
+        heading_path:
+          items:
+            type: string
+          title: Heading Path
+          type: array
+        ordinals:
+          items:
+            type: integer
+          title: Ordinals
+          type: array
+        point_id:
+          title: Point Id
+          type: string
+        product:
+          title: Product
+          type: string
+        source_url:
+          title: Source Url
+          type: string
+        text:
+          title: Text
+          type: string
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        version:
+          title: Version
+          type: string
+      required:
+      - point_id
+      - product
+      - version
+      - source_url
+      - heading_path
+      - title
+      - ordinals
+      - text
+      title: DocWindowOut
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    HealthResponse:
+      properties:
+        config_version:
+          title: Config Version
+          type: string
+        status:
+          title: Status
+          type: string
+      required:
+      - status
+      - config_version
+      title: HealthResponse
+      type: object
+    JobOut:
+      properties:
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        id:
+          format: uuid
+          title: Id
+          type: string
+        kind:
+          title: Kind
+          type: string
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        source_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Source Id
+        state:
+          title: State
+          type: string
+        updated_at:
+          format: date-time
+          title: Updated At
+          type: string
+      required:
+      - id
+      - kind
+      - state
+      - reason
+      - source_id
+      - created_at
+      - updated_at
+      title: JobOut
+      type: object
+    MeOut:
+      properties:
+        is_staff:
+          title: Is Staff
+          type: boolean
+        kind:
+          title: Kind
+          type: string
+        quota_per_day:
+          title: Quota Per Day
+          type: integer
+        subject:
+          title: Subject
+          type: string
+      required:
+      - kind
+      - subject
+      - is_staff
+      - quota_per_day
+      title: MeOut
+      type: object
+    ProbeConfig:
+      properties:
+        kind:
+          enum:
+          - npm
+          - pypi
+          - github
+          - page
+          title: Kind
+          type: string
+        package:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Package
+        pattern:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Pattern
+        prefix:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Prefix
+        repo:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo
+        tag_pattern:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tag Pattern
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+      required:
+      - kind
+      title: ProbeConfig
+      type: object
+    RejectIn:
+      properties:
+        reason:
+          title: Reason
+          type: string
+      required:
+      - reason
+      title: RejectIn
+      type: object
+    ReportIn:
+      properties:
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        point_id:
+          title: Point Id
+          type: string
+        verdict:
+          enum:
+          - helpful
+          - incorrect
+          - outdated
+          title: Verdict
+          type: string
+      required:
+      - point_id
+      - verdict
+      title: ReportIn
+      type: object
+    ReportOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+      required:
+      - id
+      title: ReportOut
+      type: object
+    RerankEvalIn:
+      properties:
+        point_ids:
+          items:
+            type: string
+          maxItems: 100
+          minItems: 1
+          title: Point Ids
+          type: array
+        query:
+          title: Query
+          type: string
+      required:
+      - query
+      - point_ids
+      title: RerankEvalIn
+      type: object
+    RerankEvalOut:
+      properties:
+        scores:
+          items:
+            $ref: '#/components/schemas/RerankScore'
+          title: Scores
+          type: array
+      required:
+      - scores
+      title: RerankEvalOut
+      type: object
+    RerankScore:
+      properties:
+        point_id:
+          title: Point Id
+          type: string
+        score:
+          title: Score
+          type: number
+      required:
+      - point_id
+      - score
+      title: RerankScore
+      type: object
+    SearchRequest:
+      properties:
+        debug:
+          default: false
+          title: Debug
+          type: boolean
+        query:
+          maxLength: 2000
+          minLength: 1
+          title: Query
+          type: string
+        sources:
+          items:
+            $ref: '#/components/schemas/SourceSelector'
+          maxItems: 5
+          minItems: 1
+          title: Sources
+          type: array
+      required:
+      - query
+      - sources
+      title: SearchRequest
+      type: object
+    SearchResponse:
+      properties:
+        candidates:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/Candidate'
+            type: array
+          - type: 'null'
+          title: Candidates
+        config_version:
+          title: Config Version
+          type: string
+        latency_ms:
+          title: Latency Ms
+          type: integer
+        resolved_versions:
+          additionalProperties:
+            type: string
+          title: Resolved Versions
+          type: object
+        results:
+          items:
+            $ref: '#/components/schemas/SearchResult'
+          title: Results
+          type: array
+        retrievals_remaining:
+          title: Retrievals Remaining
+          type: integer
+        untrusted_content_notice:
+          title: Untrusted Content Notice
+          type: string
+      required:
+      - results
+      - resolved_versions
+      - candidates
+      - untrusted_content_notice
+      - config_version
+      - latency_ms
+      - retrievals_remaining
+      title: SearchResponse
+      type: object
+    SearchResult:
+      properties:
+        heading_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Heading Id
+        heading_path:
+          items:
+            type: string
+          title: Heading Path
+          type: array
+        ordinal:
+          title: Ordinal
+          type: integer
+        point_id:
+          title: Point Id
+          type: string
+        product:
+          title: Product
+          type: string
+        rank:
+          title: Rank
+          type: integer
+        score:
+          title: Score
+          type: number
+        source_url:
+          title: Source Url
+          type: string
+        text:
+          title: Text
+          type: string
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        version:
+          title: Version
+          type: string
+      required:
+      - rank
+      - score
+      - point_id
+      - product
+      - version
+      - source_url
+      - heading_path
+      - heading_id
+      - title
+      - ordinal
+      - text
+      title: SearchResult
+      type: object
+    SourceOut:
+      properties:
+        base_url:
+          title: Base Url
+          type: string
+        product:
+          title: Product
+          type: string
+        status:
+          title: Status
+          type: string
+        versions:
+          items:
+            type: string
+          title: Versions
+          type: array
+      required:
+      - product
+      - base_url
+      - status
+      - versions
+      title: SourceOut
+      type: object
+    SourceSelector:
+      properties:
+        product:
+          title: Product
+          type: string
+        version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Version
+      required:
+      - product
+      title: SourceSelector
+      type: object
+    SubmissionIn:
+      properties:
+        exclude_patterns:
+          default: []
+          items:
+            type: string
+          title: Exclude Patterns
+          type: array
+        include_patterns:
+          default: []
+          items:
+            type: string
+          title: Include Patterns
+          type: array
+        probe:
+          anyOf:
+          - $ref: '#/components/schemas/ProbeConfig'
+          - type: 'null'
+        product:
+          title: Product
+          type: string
+        url:
+          title: Url
+          type: string
+        version_rule:
+          $ref: '#/components/schemas/VersionRule'
+        version_scheme:
+          anyOf:
+          - enum:
+            - semver
+            - date
+            - rolling
+            type: string
+          - type: 'null'
+          title: Version Scheme
+      required:
+      - url
+      - product
+      - version_rule
+      title: SubmissionIn
+      type: object
+    SubmitAccepted:
+      properties:
+        job_id:
+          format: uuid
+          title: Job Id
+          type: string
+      required:
+      - job_id
+      title: SubmitAccepted
+      type: object
+    TokenMintIn:
+      properties:
+        name:
+          minLength: 1
+          title: Name
+          type: string
+        quota_per_day:
+          minimum: 1.0
+          title: Quota Per Day
+          type: integer
+      required:
+      - name
+      - quota_per_day
+      title: TokenMintIn
+      type: object
+    TokenMinted:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        quota_per_day:
+          title: Quota Per Day
+          type: integer
+        token:
+          title: Token
+          type: string
+      required:
+      - id
+      - token
+      - name
+      - quota_per_day
+      title: TokenMinted
+      type: object
+    UserGrantIn:
+      properties:
+        name:
+          minLength: 1
+          title: Name
+          type: string
+        subject:
+          minLength: 1
+          title: Subject
+          type: string
+      required:
+      - subject
+      - name
+      title: UserGrantIn
+      type: object
+    UserGrantOut:
+      properties:
+        granted_by:
+          title: Granted By
+          type: string
+        name:
+          title: Name
+          type: string
+        status:
+          title: Status
+          type: string
+        subject:
+          title: Subject
+          type: string
+      required:
+      - subject
+      - name
+      - status
+      - granted_by
+      title: UserGrantOut
+      type: object
+    ValidationError:
+      properties:
+        ctx:
+          title: Context
+          type: object
+        input:
+          title: Input
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+    VersionOut:
+      properties:
+        chunk_count:
+          title: Chunk Count
+          type: integer
+        version:
+          title: Version
+          type: string
+      required:
+      - version
+      - chunk_count
+      title: VersionOut
+      type: object
+    VersionRule:
+      description: 'How a page''s version is read. `fixed` with no value means the
+        release
+
+        probe names each snapshot; `rolling` is one unversioned bucket.'
+      properties:
+        kind:
+          enum:
+          - path_segment
+          - subdomain
+          - fixed
+          - rolling
+          title: Kind
+          type: string
+        pattern:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Pattern
+        segment_index:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Segment Index
+        value:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Value
+      required:
+      - kind
+      title: VersionRule
+      type: object
+    VersionsOut:
+      properties:
+        latest:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Latest
+        product:
+          title: Product
+          type: string
+        versions:
+          items:
+            $ref: '#/components/schemas/VersionOut'
+          title: Versions
+          type: array
+      required:
+      - product
+      - latest
+      - versions
+      title: VersionsOut
+      type: object
+  securitySchemes:
+    HTTPBearer:
+      scheme: bearer
+      type: http
 info:
-  title: Grimoire API
-  description: Documentation retrieval service for AI agents, by Monadeo.
-  version: 0.6.27
-servers:
-  - url: https://grimoire-api.monadeo.com
-    description: Production
-  - url: https://grimoire-api-qa.monadeo.com
-    description: QA
-security:
-  - bearerAuth: []
+  title: Grimoire
+  version: 0.1.0
+openapi: 3.1.0
 paths:
-  /health:
+  /healthz:
     get:
-      operationId: getHealth
-      summary: Unauthenticated liveness probe
-      security: []
+      operationId: healthz_healthz_get
       responses:
-        "200":
-          description: Service is up
+        '200':
           content:
             application/json:
               schema:
-                type: object
-                required: [status]
-                properties:
-                  status: { type: string, const: ok }
-                  revision: { type: string }
+                $ref: '#/components/schemas/HealthResponse'
+          description: Successful Response
+      summary: Healthz
+  /v1/auth/config:
+    get:
+      operationId: auth_config_v1_auth_config_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthConfigOut'
+          description: Successful Response
+      summary: Auth Config
+  /v1/doc/{point_id}:
+    get:
+      operationId: get_doc_v1_doc__point_id__get
+      parameters:
+      - in: path
+        name: point_id
+        required: true
+        schema:
+          title: Point Id
+          type: string
+      - in: query
+        name: window
+        required: false
+        schema:
+          default: 2
+          maximum: 5
+          minimum: 0
+          title: Window
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocWindowOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Doc
+  /v1/jobs/{job_id}:
+    get:
+      operationId: get_job_v1_jobs__job_id__get
+      parameters:
+      - in: path
+        name: job_id
+        required: true
+        schema:
+          format: uuid
+          title: Job Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Job
+  /v1/me:
+    get:
+      operationId: me_v1_me_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeOut'
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Me
+  /v1/report:
+    post:
+      operationId: report_result_v1_report_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportIn'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Report Result
   /v1/search:
     post:
-      operationId: search
-      summary: Hybrid documentation search across up to 5 source@version targets
+      operationId: search_v1_search_post
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [query, sources]
-              properties:
-                query: { type: string, maxLength: 1000 }
-                sources:
-                  type: array
-                  minItems: 1
-                  maxItems: 5
-                  items:
-                    type: object
-                    required: [source]
-                    properties:
-                      source: { type: string }
-                      version: { type: string, default: latest }
-                language: { type: string }
-                top_k: { type: integer, default: 8, minimum: 1, maximum: 20 }
-                candidates_per_source: { type: integer, default: 100, minimum: 10, maximum: 100 }
-                max_response_tokens: { type: integer }
-                include_candidate_ids:
-                  type: boolean
-                  default: false
-                  description:
-                    Also return the fused pre-rerank candidate id list (quality-harness
-                    instrumentation; candidate-stage recall is scored against it).
+              $ref: '#/components/schemas/SearchRequest'
+        required: true
       responses:
-        "200":
-          description: Ranked, attributed chunks
+        '200':
           content:
             application/json:
               schema:
-                type: object
-                required: [results, confidence, reranked, resolved_versions, usage]
-                properties:
-                  results:
-                    type: array
-                    items: { $ref: "#/components/schemas/Chunk" }
-                  confidence: { type: string, enum: [strong, weak] }
-                  reranked: { type: boolean }
-                  rerank_status:
-                    type: string
-                    enum: [used, degraded, disabled]
-                    description: used = cross-encoder ordered the results; degraded = reranker configured but unavailable, fused order served; disabled = no reranker in the retrieval config
-                  resolved_versions:
-                    type: object
-                    additionalProperties: { type: string }
-                  usage:
-                    type: object
-                    properties:
-                      retrievals_remaining: { type: [integer, "null"] }
-                  candidate_ids:
-                    type: array
-                    items: { type: string }
-        "400": { $ref: "#/components/responses/Error" }
-        "401": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-        "404": { $ref: "#/components/responses/Error" }
-        "429": { $ref: "#/components/responses/Error" }
-        "503": { $ref: "#/components/responses/Error" }
+                $ref: '#/components/schemas/SearchResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Search
   /v1/sources:
     get:
-      operationId: listSources
-      summary: List accessible sources (public + caller tenant)
-      parameters:
-        - { name: q, in: query, schema: { type: string } }
+      operationId: list_sources_v1_sources_get
       responses:
-        "200":
-          description: Source cards
+        '200':
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  sources:
-                    type: array
-                    items: { $ref: "#/components/schemas/SourceCard" }
-        "401": { $ref: "#/components/responses/Error" }
+                items:
+                  $ref: '#/components/schemas/SourceOut'
+                title: Response List Sources V1 Sources Get
+                type: array
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: List Sources
     post:
-      operationId: submitSource
-      summary: Submit a documentation source for ingestion
+      operationId: submit_source_v1_sources_post
       requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionIn'
         required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                url: { type: string, format: uri }
-                source_id: { type: string, pattern: "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,80}$" }
-                upload_ref:
-                  type: string
-                  description: GCS upload reference for private zip submissions (requires source_id)
-                version: { type: string, pattern: "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,80}$" }
-                visibility: { type: string, enum: [public, private], default: public }
-                webhook_url: { type: string, format: uri }
-                scrape_config: { type: object }
       responses:
-        "201":
-          description: Ingestion job created
+        '202':
           content:
             application/json:
               schema:
-                type: object
-                required: [job_id, source_id, version_id]
-                properties:
-                  job_id: { type: string }
-                  source_id: { type: string }
-                  version_id: { type: string }
-        "400": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
-        "429": { $ref: "#/components/responses/Error" }
-        "503": { $ref: "#/components/responses/Error" }
-  /v1/sources/{sourceId}/versions:
+                $ref: '#/components/schemas/SubmitAccepted'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Submit Source
+  /v1/sources/{product}/versions:
     get:
-      operationId: listVersions
-      summary: All versions of a source
+      operationId: list_versions_v1_sources__product__versions_get
       parameters:
-        - { name: sourceId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200":
-          description: Versions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  versions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        version_id: { type: string }
-                        semver: { type: [string, "null"] }
-                        ingested_at: { type: string }
-                        status: { type: string }
-                        is_latest: { type: boolean }
-                        chunk_count: { type: integer }
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/documents/{chunkId}/context:
-    get:
-      operationId: getDocumentContext
-      summary: Chunk plus neighbors in the same document
-      parameters:
-        - { name: chunkId, in: path, required: true, schema: { type: string } }
-        - { name: window, in: query, schema: { type: integer, default: 2, minimum: 0, maximum: 5 } }
-      responses:
-        "200":
-          description: Neighboring chunks
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  chunks:
-                    type: array
-                    items: { $ref: "#/components/schemas/ContextChunk" }
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/catalog:
-    get:
-      operationId: getCatalog
-      summary: Public source catalog (unauthenticated, cached)
-      security: []
-      responses:
-        "200":
-          description: Public sources
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  sources:
-                    type: array
-                    items: { $ref: "#/components/schemas/SourceCard" }
-  /v1/catalog/{sourceId}:
-    get:
-      operationId: getCatalogSource
-      summary: One public source card (unauthenticated, cached)
-      security: []
-      parameters:
-        - { name: sourceId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200":
-          description: Source card
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/SourceCard" }
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/feedback:
-    post:
-      operationId: reportResult
-      summary: Report a retrieved chunk as helpful, incorrect, or outdated
-      requestBody:
+      - in: path
+        name: product
         required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [chunk_id, verdict]
-              properties:
-                chunk_id: { type: string }
-                verdict: { type: string, enum: [helpful, incorrect, outdated] }
-                note: { type: string, maxLength: 1000 }
-      responses:
-        "201":
-          description: Recorded
-        "400": { $ref: "#/components/responses/Error" }
-        "404": { $ref: "#/components/responses/Error" }
-        "429": { $ref: "#/components/responses/Error" }
-  /v1/jobs/{jobId}:
-    get:
-      operationId: getJob
-      summary: Ingestion job status (SSE with Accept text/event-stream)
-      parameters:
-        - { name: jobId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200":
-          description: Job document (or SSE stream)
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Job" }
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/jobs/{jobId}/errors:
-    get:
-      operationId: getJobErrors
-      summary: Per-document errors of an ingestion job
-      parameters:
-        - { name: jobId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200":
-          description: Errors
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  errors:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        stage: { type: string }
-                        document_url: { type: string }
-                        message: { type: string }
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/jobs/{jobId}/quarantine:
-    get:
-      operationId: listQuarantinedChunks
-      summary: Tenant self-review of private quarantined chunks (admin/owner)
-      parameters:
-        - { name: jobId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200":
-          description: Quarantined chunks awaiting tenant review
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  chunks:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        chunk_id: { type: string }
-                        text: { type: string }
-                        heading_path: { type: array, items: { type: string } }
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/jobs/{jobId}/quarantine/{chunkId}/release:
-    post:
-      operationId: releaseQuarantinedChunk
-      summary: Release a quarantined private chunk into the index
-      parameters:
-        - { name: jobId, in: path, required: true, schema: { type: string } }
-        - { name: chunkId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200": { $ref: "#/components/responses/Ok" }
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/jobs/{jobId}/quarantine/{chunkId}/delete:
-    post:
-      operationId: deleteQuarantinedChunk
-      summary: Permanently discard a quarantined private chunk
-      parameters:
-        - { name: jobId, in: path, required: true, schema: { type: string } }
-        - { name: chunkId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200": { $ref: "#/components/responses/Ok" }
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/tickets:
-    get:
-      operationId: listTickets
-      summary: Tenant's support tickets
-      responses:
-        "200":
-          description: Tickets
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  tickets:
-                    type: array
-                    items: { $ref: "#/components/schemas/Ticket" }
-    post:
-      operationId: openTicket
-      summary: Open a re-ingest or escalation ticket
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [type, source_id, reason]
-              properties:
-                type: { type: string, enum: [reingest, escalation] }
-                source_id: { type: string }
-                reason: { type: string, maxLength: 2000 }
-      responses:
-        "201":
-          description: Ticket created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ticket_id: { type: string }
-        "400": { $ref: "#/components/responses/Error" }
-  /v1/tickets/{ticketId}/messages:
-    get:
-      operationId: listTicketMessages
-      summary: Messages on a ticket
-      parameters:
-        - { name: ticketId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200":
-          description: Messages
-        "404": { $ref: "#/components/responses/Error" }
-    post:
-      operationId: postTicketMessage
-      summary: Add a message to a ticket
-      parameters:
-        - { name: ticketId, in: path, required: true, schema: { type: string } }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [body]
-              properties:
-                body: { type: string, maxLength: 5000 }
-      responses:
-        "201":
-          description: Message added
-        "404": { $ref: "#/components/responses/Error" }
-  /v1/tenants/me:
-    get:
-      operationId: getTenant
-      summary: Caller's tenant profile
-      responses:
-        "200":
-          description: Tenant
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Tenant" }
-        "404": { $ref: "#/components/responses/Error" }
-    patch:
-      operationId: updateTenant
-      summary: Update tenant name / overage settings (owner)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name: { type: string, maxLength: 100 }
-                overage:
-                  type: object
-                  properties:
-                    enabled: { type: boolean }
-                    monthly_cap_usd: { type: number, minimum: 0 }
-      responses:
-        "200": { $ref: "#/components/responses/Ok" }
-        "400": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-    delete:
-      operationId: deleteTenant
-      summary: Request tenant deletion (owner; 30-day erasure cascade)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [confirm]
-              properties:
-                confirm: { type: string, description: Must equal the tenant id }
-      responses:
-        "202":
-          description: Erasure scheduled
-        "400": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-  /v1/tenants/me/usage:
-    get:
-      operationId: getTenantUsage
-      summary: Current-month usage totals
-      responses:
-        "200":
-          description: Usage
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  month: { type: string }
-                  usage:
-                    type: object
-                    additionalProperties: { type: number }
-  /v1/tenants/me/machine-tokens:
-    get:
-      operationId: listMachineTokens
-      summary: List machine tokens (admin/owner, paid plan)
-      responses:
-        "200":
-          description: Tokens (hashes never returned)
-        "403": { $ref: "#/components/responses/Error" }
-    post:
-      operationId: createMachineToken
-      summary: Create a machine token (shown once)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [label, scopes]
-              properties:
-                label: { type: string, maxLength: 60 }
-                scopes:
-                  type: array
-                  items: { type: string, enum: [search, ingest] }
-      responses:
-        "201":
-          description: Token created — the raw token is returned exactly once
-        "400": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-  /v1/tenants/me/machine-tokens/{tokenId}:
-    delete:
-      operationId: revokeMachineToken
-      summary: Revoke a machine token
-      parameters:
-        - { name: tokenId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200": { $ref: "#/components/responses/Ok" }
-        "403": { $ref: "#/components/responses/Error" }
-  /v1/tenants/me/webhook-secret:
-    post:
-      operationId: rotateWebhookSecret
-      summary: Rotate the tenant webhook HMAC secret (shown once)
-      responses:
-        "200":
-          description: New secret
-        "403": { $ref: "#/components/responses/Error" }
-  /v1/tenants/me/members:
-    get:
-      operationId: listMembers
-      summary: Tenant members
-      responses:
-        "200":
-          description: Members
-  /v1/tenants/me/members/{userId}:
-    delete:
-      operationId: removeMember
-      summary: Remove a member (admin/owner; owner cannot be removed)
-      parameters:
-        - { name: userId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200": { $ref: "#/components/responses/Ok" }
-        "400": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-  /v1/tenants/me/invites:
-    get:
-      operationId: listInvites
-      summary: Open invites
-      responses:
-        "200":
-          description: Invites
-    post:
-      operationId: createInvite
-      summary: Create a shareable invite link (token shown once)
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                role: { type: string, enum: [member, admin], default: member }
-      responses:
-        "201":
-          description: Invite created
-        "400": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-  /v1/tenants/me/invites/{inviteId}:
-    delete:
-      operationId: revokeInvite
-      summary: Revoke an invite
-      parameters:
-        - { name: inviteId, in: path, required: true, schema: { type: string } }
-      responses:
-        "200": { $ref: "#/components/responses/Ok" }
-  /v1/invites/redeem:
-    post:
-      operationId: redeemInvite
-      summary: Redeem an invite token (single use, seat-limited)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [token]
-              properties:
-                token: { type: string }
-      responses:
-        "200":
-          description: Joined
-        "404": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
-        "410": { $ref: "#/components/responses/Error" }
-  /v1/users/bootstrap:
-    post:
-      operationId: bootstrapUser
-      summary: Idempotently create the caller's user record and implicit free tenant
-      description:
-        First-login step (data-model rule "one tenant per user", server-side writes
-        only). Safe to call on every sign-in; returns the existing tenant afterwards.
-      responses:
-        "200":
-          description: The caller's tenant
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [tenant_id, role, created]
-                properties:
-                  tenant_id: { type: string }
-                  role: { type: string, enum: [owner, admin, member] }
-                  created: { type: boolean }
-        "401": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-  /v1/billing/checkout:
-    post:
-      operationId: createCheckout
-      summary: Start a Team subscription (Stripe Checkout session; owner only)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                plan: { type: string, enum: [solo, team], default: team }
-                seats:
-                  type: integer
-                  minimum: 1
-                  maximum: 500
-                  description: Team only; Solo is always a single seat.
-      responses:
-        "200":
-          description: Hosted checkout session
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [url]
-                properties:
-                  url: { type: string, format: uri }
-        "400": { $ref: "#/components/responses/Error" }
-        "401": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
-  /v1/billing/portal:
-    post:
-      operationId: createBillingPortal
-      summary: Open the Stripe customer portal (owner only)
-      responses:
-        "200":
-          description: Hosted portal session
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [url]
-                properties:
-                  url: { type: string, format: uri }
-        "401": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
-  /v1/webhooks/stripe:
-    post:
-      operationId: stripeWebhook
-      summary: Stripe events (signature-verified with the webhook secret; not a client API)
-      security: []
-      responses:
-        "200":
-          description: Event accepted
-        "400": { $ref: "#/components/responses/Error" }
-  /auth/cli/start:
-    get:
-      operationId: cliAuthStart
-      summary: Begin the CLI browser login (hosted sign-in page)
-      security: []
-      parameters:
-        - name: code_challenge
-          in: query
-          required: true
-          schema: { type: string, pattern: "^[A-Za-z0-9_-]{43}$" }
-          description: PKCE S256 challenge
-        - name: code_challenge_method
-          in: query
-          required: false
-          schema: { type: string, enum: [S256] }
-        - name: state
-          in: query
-          required: false
-          schema: { type: string, pattern: "^[A-Za-z0-9_-]{1,128}$" }
-          description: Opaque CSRF token the sign-in page echoes to the loopback callback
-        - name: redirect_uri
-          in: query
-          required: true
-          schema: { type: string, format: uri }
-          description: CLI loopback callback — must match http://127.0.0.1:<port>/callback
-      responses:
-        "200":
-          description: Hosted sign-in page (HTML)
-        "400": { $ref: "#/components/responses/Error" }
-  /auth/cli/complete:
-    post:
-      operationId: cliAuthComplete
-      summary: Hosted page posts the signed-in user's refresh token against the code
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [code, refresh_token, id_token]
-              properties:
-                code: { type: string }
-                refresh_token: { type: string }
-                id_token: { type: string }
-      responses:
-        "200": { $ref: "#/components/responses/Ok" }
-        "400": { $ref: "#/components/responses/Error" }
-        "401": { $ref: "#/components/responses/Error" }
-        "404": { $ref: "#/components/responses/Error" }
-  /auth/cli/exchange:
-    post:
-      operationId: cliAuthExchange
-      summary: CLI exchanges the one-time code + PKCE verifier for the refresh token
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [code, code_verifier]
-              properties:
-                code: { type: string }
-                code_verifier: { type: string }
-      responses:
-        "200":
-          description: Refresh token (one-shot; the code is consumed)
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [refresh_token]
-                properties:
-                  refresh_token: { type: string }
-        "400": { $ref: "#/components/responses/Error" }
-        "404": { $ref: "#/components/responses/Error" }
-        "428":
-          description: Authorization pending — the user has not completed sign-in yet
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string, const: authorization_pending }
-  /auth/cli/refresh:
-    post:
-      operationId: cliAuthRefresh
-      summary: Exchange the stored refresh token for a short-lived ID token
-      description:
-        Silent-refresh endpoint the clients call before every authenticated
-        request when the cached ID token expired. Ships with the Phase 6 auth
-        work (the client contract is fixed here first — contract-first rule).
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [refresh_token]
-              properties:
-                refresh_token: { type: string }
-      responses:
-        "200":
-          description: Fresh ID token
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [id_token, expires_in]
-                properties:
-                  id_token: { type: string }
-                  expires_in: { type: integer, description: Seconds until expiry }
-        "400": { $ref: "#/components/responses/Error" }
-        "401": { $ref: "#/components/responses/Error" }
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      description: Firebase ID token or machine token (mt_ prefix)
-  responses:
-    Ok:
-      description: Success
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              ok: { type: boolean }
-    Error:
-      description: Structured error
-      content:
-        application/json:
-          schema:
-            type: object
-            required: [error]
-            properties:
-              error: { type: string }
-              message: { type: string }
-  schemas:
-    SourceCard:
-      type: object
-      properties:
-        source_id: { type: string }
-        display_name: { type: string }
-        visibility: { type: string, enum: [public, private] }
-        latest_version: { type: [string, "null"] }
-        latest_semver:
-          type: [string, "null"]
-          description: Precise product version of the latest snapshot (e.g. 16.2.10), when known
-        latest_pages: { type: [integer, "null"] }
-        latest_chunks: { type: [integer, "null"] }
-        latest_crawled_at: { type: [string, "null"] }
-        languages: { type: array, items: { type: string } }
-        origin_url: { type: [string, "null"] }
-    Chunk:
-      type: object
-      required: [chunk_id, source, version, score, text, origin_url, token_count]
-      properties:
-        chunk_id: { type: string }
-        source: { type: string }
-        version: { type: string }
-        ingested_at: { type: string }
-        score: { type: number }
-        heading_path: { type: array, items: { type: string } }
-        text: { type: string }
-        token_count: { type: integer }
-        origin_url: { type: string }
-    ContextChunk:
-      type: object
-      properties:
-        chunk_id: { type: string }
-        text: { type: string }
-        heading_path: { type: array, items: { type: string } }
-        origin_url: { type: string }
-        token_count: { type: integer }
-    Job:
-      type: object
-      properties:
-        job_id: { type: string }
-        source_id: { type: string }
-        version_id: { type: string }
-        status:
+        schema:
+          title: Product
           type: string
-          enum: [validating, pending_review, fetching, parsing, indexing, publishing, complete, failed, rejected]
-        counters:
-          type: object
-          additionalProperties: { type: number }
-    Ticket:
-      type: object
-      properties:
-        ticket_id: { type: string }
-        type: { type: string, enum: [reingest, escalation] }
-        source_id: { type: string }
-        reason: { type: string }
-        status: { type: string }
-    Tenant:
-      type: object
-      properties:
-        tenant_id: { type: string }
-        name: { type: string }
-        plan: { type: string, enum: [free, team] }
-        seat_limit: { type: integer }
-        overage:
-          type: object
-          properties:
-            enabled: { type: boolean }
-            monthly_cap_usd: { type: number }
-        billing_state:
-          type: object
-          properties:
-            suspended: { type: boolean }
-            grace_until: { type: string }
-# Contract-first rule: endpoints are added HERE before code; clients generate from
-# this file. Staff-only routes (/v1/staff/*) are deliberately not part of the public
-# contract — they are internal, CF-Access-gated, and consumed by the staff console only.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionsOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: List Versions
+  /v1/staff/jobs/{job_id}/approve:
+    post:
+      operationId: approve_job_v1_staff_jobs__job_id__approve_post
+      parameters:
+      - in: path
+        name: job_id
+        required: true
+        schema:
+          format: uuid
+          title: Job Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Approve Job
+  /v1/staff/jobs/{job_id}/reject:
+    post:
+      operationId: reject_job_v1_staff_jobs__job_id__reject_post
+      parameters:
+      - in: path
+        name: job_id
+        required: true
+        schema:
+          format: uuid
+          title: Job Id
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectIn'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Reject Job
+  /v1/staff/rerank-eval:
+    post:
+      operationId: rerank_eval_v1_staff_rerank_eval_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RerankEvalIn'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RerankEvalOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Rerank Eval
+  /v1/staff/review-queue:
+    get:
+      operationId: review_queue_v1_staff_review_queue_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/JobOut'
+                title: Response Review Queue V1 Staff Review Queue Get
+                type: array
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Review Queue
+  /v1/staff/sources/{source_id}/recrawl:
+    post:
+      operationId: recrawl_source_v1_staff_sources__source_id__recrawl_post
+      parameters:
+      - in: path
+        name: source_id
+        required: true
+        schema:
+          format: uuid
+          title: Source Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Recrawl Source
+  /v1/staff/tokens:
+    post:
+      operationId: mint_token_v1_staff_tokens_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenMintIn'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenMinted'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Mint Token
+  /v1/staff/users:
+    get:
+      operationId: list_users_v1_staff_users_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserGrantOut'
+                title: Response List Users V1 Staff Users Get
+                type: array
+          description: Successful Response
+      security: &id001
+      - HTTPBearer: []
+      summary: List Users
+    post:
+      operationId: grant_user_v1_staff_users_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserGrantIn'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGrantOut'
+          description: Successful Response
+        '422': &id002
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security: *id001
+      summary: Grant User
+  /v1/staff/users/{subject}:
+    delete:
+      operationId: revoke_user_v1_staff_users__subject__delete
+      parameters:
+      - in: path
+        name: subject
+        required: true
+        schema:
+          title: Subject
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGrantOut'
+          description: Successful Response
+        '422': *id002
+      security: *id001
+      summary: Revoke User

@@ -10,19 +10,16 @@ export interface SourcePin {
 export interface GlobalConfig {
   apiBaseUrl: string;
   defaultSources?: SourcePin[];
-  defaultLanguage?: string;
-  maxResponseTokens?: number;
   updateCheckHours?: number;
 }
 
 export interface ProjectConfig {
   sources?: SourcePin[];
-  language?: string;
 }
 
-// Bare origin — API paths are absolute (/v1/..., /auth/cli/...), so the base must
-// never carry a path prefix or auth-broker URLs would be built wrong.
-export const DEFAULT_API_BASE = "https://grimoire-api.monadeo.com";
+// Bare origin — API paths are absolute (/v1/...), so the base must never carry a
+// path prefix.
+export const DEFAULT_API_BASE = "https://cli.grimoire.monadeo.com";
 
 export function globalConfigPath(): string {
   return join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "grimoire", "config.json");
