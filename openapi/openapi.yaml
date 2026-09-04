@@ -616,6 +616,10 @@ components:
           - type: boolean
           - type: 'null'
           title: Page Markdown
+        probe:
+          anyOf:
+          - $ref: '#/components/schemas/ProbeConfig'
+          - type: 'null'
         status:
           anyOf:
           - enum:
@@ -624,6 +628,19 @@ components:
             type: string
           - type: 'null'
           title: Status
+        version_rule:
+          anyOf:
+          - $ref: '#/components/schemas/VersionRule'
+          - type: 'null'
+        version_scheme:
+          anyOf:
+          - enum:
+            - semver
+            - date
+            - rolling
+            type: string
+          - type: 'null'
+          title: Version Scheme
       title: SourceScopeIn
       type: object
     SourceSelector:

@@ -17,7 +17,7 @@ import {
   type SourcePin,
   type SourceSelector,
 } from "@monadeo.com/grimoire-core";
-import { parseArgs, requirePositional, requireFlagOneOf, intFlag, UsageError } from "./args.js";
+import { parseArgs, requirePositional, requireFlagOneOf, intFlag, UsageError, type ParsedArgs } from "./args.js";
 import { COMMAND_FLAGS, HELP, VERSION } from "./help.js";
 import { printResults, printCompact, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
@@ -83,6 +83,24 @@ async function describeIdentity(client: GrimoireClient): Promise<string> {
     }
     throw err;
   }
+}
+
+// The same version flags `grimoire ingest` takes, so a rule is corrected with
+// the words it was declared with.
+function versioningFromArgs(args: ParsedArgs): Partial<SourceScopeIn> {
+  const fixed = args.flags.fixed?.[0];
+  const npm = args.flags.npm?.[0];
+  const pypi = args.flags.pypi?.[0];
+  const github = args.flags.github?.[0];
+  if ([npm, pypi, github].filter(Boolean).length > 1) {
+    throw new UsageError("Pass only one of --npm, --pypi, --github");
+  }
+  if (args.bools.has("rolling")) return { version_rule: { kind: "rolling" } };
+  if (fixed) return { version_rule: { kind: "fixed", value: fixed } };
+  if (npm) return { version_rule: { kind: "fixed" }, probe: { kind: "npm", package: npm } };
+  if (pypi) return { version_rule: { kind: "fixed" }, probe: { kind: "pypi", package: pypi } };
+  if (github) return { version_rule: { kind: "fixed" }, probe: { kind: "github", repo: github } };
+  return {};
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -272,7 +290,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] | recrawl <s> | reindex <s> | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--rolling|--fixed v|--npm p|--pypi p|--github o/r] | recrawl <s> | reindex <s> | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -337,6 +355,7 @@ async function main(argv: string[]): Promise<number> {
           if (args.flags.exclude) edit.exclude_patterns = args.flags.exclude;
           if (status) edit.status = status;
           if (markdown) edit.page_markdown = markdown === "on";
+          Object.assign(edit, versioningFromArgs(args));
           const detail =
             Object.keys(edit).length > 0 ? await client.editSource(sourceId, edit) : await client.sourceDetail(sourceId);
           process.stdout.write(json ? JSON.stringify(detail, null, 2) + "\n" : `${describeSource(detail)}\n`);

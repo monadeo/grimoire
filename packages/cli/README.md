@@ -71,6 +71,7 @@ These need a staff account.
 | `grimoire staff source <product\|id> [--watch] [--json]` | Where a source stands: route, scope, versions, crawl state, pages indexed, and the job it is in. `--watch` prints a line whenever that changes, until the job ends. |
 | `grimoire staff urls <product\|id> [--state <crawl state>] [--limit 50] [--json]` | Every URL of a source with its crawl state, failures first and why |
 | `grimoire staff source <product\|id> [--include <pattern>]... [--exclude <pattern>]... [--status active\|disabled] [--markdown on\|off]` | Change what a source covers and how it is fetched |
+| `grimoire staff source <product\|id> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo>)` | Correct how a source reads its version. Drops the chunks under the old label and reindexes from the stored crawl. |
 | `grimoire staff recrawl <product\|id>` | Fetch the site again |
 | `grimoire staff reindex <product\|id>` | Index the stored crawl again, no fetching |
 | `grimoire staff purge <product\|id> --yes` | Delete a source and everything indexed from it |

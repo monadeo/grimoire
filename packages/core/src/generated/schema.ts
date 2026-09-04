@@ -728,8 +728,12 @@ export interface components {
             include_patterns?: string[] | null;
             /** Page Markdown */
             page_markdown?: boolean | null;
+            probe?: components["schemas"]["ProbeConfig"] | null;
             /** Status */
             status?: ("active" | "disabled") | null;
+            version_rule?: components["schemas"]["VersionRule"] | null;
+            /** Version Scheme */
+            version_scheme?: ("semver" | "date" | "rolling") | null;
         };
         /** SourceSelector */
         SourceSelector: {
