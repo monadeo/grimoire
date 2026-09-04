@@ -89,6 +89,12 @@ export class GrimoireClient {
   }
 
   // The login email from the session token; undefined for machine tokens.
+  /** The account's Supabase subject, readable before any grant exists. */
+  async sessionSubject(): Promise<string | undefined> {
+    const claims = tokenClaims(await this.bearer());
+    return typeof claims.sub === "string" ? claims.sub : undefined;
+  }
+
   async sessionEmail(): Promise<string | undefined> {
     if (this.machineToken) return undefined;
     const email = tokenClaims(await this.bearer()).email;
@@ -183,12 +189,13 @@ export class GrimoireClient {
     return this.request<UserGrantOut[]>("/v1/staff/users");
   }
 
-  grantUser(subject: string, name: string): Promise<UserGrantOut> {
+  grantUser(subject: string, name: string, staff = false): Promise<UserGrantOut> {
     return this.request<UserGrantOut>("/v1/staff/users", {
       method: "POST",
-      body: JSON.stringify({ subject, name }),
+      body: JSON.stringify({ subject, name, staff }),
     });
   }
+
 
   revokeUser(subject: string): Promise<UserGrantOut> {
     return this.request<UserGrantOut>(`/v1/staff/users/${encodeURIComponent(subject)}`, { method: "DELETE" });

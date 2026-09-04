@@ -381,7 +381,10 @@ export interface paths {
         /** List Users */
         get: operations["list_users_v1_staff_users_get"];
         put?: never;
-        /** Grant User */
+        /**
+         * Grant User
+         * @description Grant access, and decide staff membership in the same call.
+         */
         post: operations["grant_user_v1_staff_users_post"];
         delete?: never;
         options?: never;
@@ -399,7 +402,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Revoke User */
+        /**
+         * Revoke User
+         * @description Revoking takes staff membership with it; there is no access left to use it.
+         */
         delete: operations["revoke_user_v1_staff_users__subject__delete"];
         options?: never;
         head?: never;
@@ -796,6 +802,11 @@ export interface components {
         UserGrantIn: {
             /** Name */
             name: string;
+            /**
+             * Staff
+             * @default false
+             */
+            staff: boolean;
             /** Subject */
             subject: string;
         };
@@ -803,6 +814,8 @@ export interface components {
         UserGrantOut: {
             /** Granted By */
             granted_by: string;
+            /** Is Staff */
+            is_staff: boolean;
             /** Name */
             name: string;
             /** Status */

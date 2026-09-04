@@ -76,10 +76,14 @@ async function describeIdentity(client: GrimoireClient): Promise<string> {
   const who = email ?? "machine token";
   try {
     const me = await client.me();
-    return `${who} (${me.kind} ${me.subject})${me.is_staff ? "  staff" : ""}  quota ${me.quota_per_day}/day`;
+    const level = me.is_staff ? "staff" : "user";
+    return `${who}\nsubject ${me.subject} (${me.kind})\naccess ${level}, ${me.quota_per_day} searches/day`;
   } catch (err) {
     if (err instanceof ApiError && err.status === 403) {
-      return `${who} — authenticated, but this account has no Grimoire access grant yet`;
+      // The subject is what staff needs to grant access, so it must be
+      // readable by the person who has none yet.
+      const subject = await client.sessionSubject();
+      return `${who}\nsubject ${subject ?? "unknown"}\naccess none — ask a staff member for: grimoire staff grant ${subject ?? "<subject>"} --name "${email ?? "your name"}"`;
     }
     throw err;
   }
@@ -290,7 +294,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--rolling|--fixed v|--npm p|--pypi p|--github o/r] | recrawl <s> | reindex <s> | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--rolling|--fixed v|--npm p|--pypi p|--github o/r] | recrawl <s> | reindex <s> | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -375,14 +379,16 @@ async function main(argv: string[]): Promise<number> {
         if (action === "users") {
           const users = await client.listUsers();
           if (json) process.stdout.write(JSON.stringify(users, null, 2) + "\n");
-          else for (const u of users) process.stdout.write(`${u.subject}  ${u.status}  ${u.name}  by ${u.granted_by}\n`);
+          else for (const u of users) process.stdout.write(`${u.subject}  ${u.status}  ${u.is_staff ? "staff" : "user"}  ${u.name}  by ${u.granted_by}\n`);
           return EXIT.ok;
         }
         if (action === "grant") {
           const name = args.flags.name?.[0];
           if (!jobId || !name) throw new UsageError(usage);
-          const granted = await client.grantUser(jobId, name);
-          process.stdout.write(`${granted.subject}  ${granted.status}  ${granted.name}\n`);
+          const staff = args.flags.staff?.[0];
+          if (staff !== undefined && staff !== "on" && staff !== "off") throw new UsageError(usage);
+          const granted = await client.grantUser(jobId, name, staff === "on");
+          process.stdout.write(`${granted.subject}  ${granted.status}  ${granted.is_staff ? "staff" : "user"}  ${granted.name}\n`);
           return EXIT.ok;
         }
         if (action === "revoke") {

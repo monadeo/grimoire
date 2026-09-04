@@ -751,6 +751,10 @@ components:
           minLength: 1
           title: Name
           type: string
+        staff:
+          default: false
+          title: Staff
+          type: boolean
         subject:
           minLength: 1
           title: Subject
@@ -765,6 +769,9 @@ components:
         granted_by:
           title: Granted By
           type: string
+        is_staff:
+          title: Is Staff
+          type: boolean
         name:
           title: Name
           type: string
@@ -778,6 +785,7 @@ components:
       - subject
       - name
       - status
+      - is_staff
       - granted_by
       title: UserGrantOut
       type: object
@@ -1532,6 +1540,7 @@ paths:
       - HTTPBearer: []
       summary: List Users
     post:
+      description: Grant access, and decide staff membership in the same call.
       operationId: grant_user_v1_staff_users_post
       requestBody:
         content:
@@ -1557,6 +1566,8 @@ paths:
       summary: Grant User
   /v1/staff/users/{subject}:
     delete:
+      description: Revoking takes staff membership with it; there is no access left
+        to use it.
       operationId: revoke_user_v1_staff_users__subject__delete
       parameters:
       - in: path

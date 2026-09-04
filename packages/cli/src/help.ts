@@ -22,7 +22,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
                         [--include <pattern>]... [--exclude <pattern>]... [--watch]
   grimoire jobs <job_id> [--watch]
   grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."
-  grimoire staff users [--json] | grant <subject> --name "..." | revoke <subject>
+  grimoire staff users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject>
   grimoire staff token <name> --quota <per-day>
   grimoire staff jobs [--source <product|id>] [--state <state>] [--kind <kind>] [--limit 50] [--json]
   grimoire staff cancel <job_id>
@@ -54,5 +54,5 @@ export const COMMAND_FLAGS: Record<string, readonly string[]> = {
   report: ["verdict", "note"],
   ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "include", "exclude", "watch"],
   jobs: ["watch"],
-  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "yes", "watch", "rolling", "fixed", "npm", "pypi", "github"],
+  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "yes", "watch", "rolling", "fixed", "npm", "pypi", "github", "staff"],
 };

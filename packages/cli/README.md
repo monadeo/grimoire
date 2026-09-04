@@ -76,7 +76,7 @@ These need a staff account.
 | `grimoire staff reindex <product\|id>` | Index the stored crawl again, no fetching |
 | `grimoire staff purge <product\|id> --yes` | Delete a source and everything indexed from it |
 | `grimoire staff users [--json]` | Access grants |
-| `grimoire staff grant <subject> --name "..."` | Grant access |
+| `grimoire staff grant <subject> --name "..." [--staff on\|off]` | Grant access, and optionally make the account staff |
 | `grimoire staff revoke <subject>` | Revoke access |
 | `grimoire staff token <name> --quota <per-day>` | Mint a machine token, shown once |
 
