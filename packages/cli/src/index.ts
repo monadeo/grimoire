@@ -112,10 +112,12 @@ function describeSource(detail: SourceDetailOut): string {
 }
 
 function describeJob(job: JobOut): string {
+  // A job left behind by a restart still says "running"; say so plainly.
+  const state = job.stalled ? `${job.state} (stalled, waiting to be picked up)` : job.state;
   const extra = [job.reason ? `reason: ${job.reason}` : "", job.source_id ? `source: ${job.source_id}` : ""]
     .filter(Boolean)
     .join("  ");
-  return `${job.state}${extra ? `  ${extra}` : ""}`;
+  return `${state}${extra ? `  ${extra}` : ""}`;
 }
 
 async function main(argv: string[]): Promise<number> {

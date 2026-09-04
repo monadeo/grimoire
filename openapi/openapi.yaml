@@ -169,6 +169,10 @@ components:
           format: date-time
           title: Created At
           type: string
+        stalled:
+          default: false
+          title: Stalled
+          type: boolean
         id:
           format: uuid
           title: Id

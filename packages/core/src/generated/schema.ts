@@ -494,6 +494,11 @@ export interface components {
              */
             created_at: string;
             /**
+             * Stalled
+             * @default false
+             */
+            stalled: boolean;
+            /**
              * Id
              * Format: uuid
              */
