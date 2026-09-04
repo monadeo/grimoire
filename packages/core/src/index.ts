@@ -44,4 +44,7 @@ export {
   type MeOut,
   type UserGrantOut,
   type TokenMinted,
+  type SourceDetailOut,
+  type SourceScopeIn,
+  type PurgeOut,
 } from "./client.js";

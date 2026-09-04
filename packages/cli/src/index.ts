@@ -11,6 +11,8 @@ import {
   resolveDefaultSources,
   loadGlobalConfig,
   type JobOut,
+  type SourceDetailOut,
+  type SourceScopeIn,
   type SourcePin,
   type SourceSelector,
 } from "@monadeo.com/grimoire-core";
@@ -74,7 +76,12 @@ const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
   grimoire jobs <job_id> [--watch]
   grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."
   grimoire staff users [--json] | grant <subject> --name "..." | revoke <subject>
-  grimoire staff token <name> --quota <per-day> | recrawl <source_id>
+  grimoire staff token <name> --quota <per-day>
+  grimoire staff jobs [--source <product|id>] [--state <state>] [--kind <kind>] [--limit 50] [--json]
+  grimoire staff cancel <job_id>
+  grimoire staff source <product|id> [--json]
+  grimoire staff source <product|id> [--include <pattern>]... [--exclude <pattern>]... [--status active|disabled]
+  grimoire staff recrawl <product|id> | reindex <product|id> | purge <product|id> --yes
   grimoire mcp [--http]
   grimoire help | --help | -h
   grimoire version | --version | -v
@@ -98,7 +105,7 @@ const COMMAND_FLAGS: Record<string, readonly string[]> = {
   report: ["verdict", "note"],
   ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "include", "exclude", "watch"],
   jobs: ["watch"],
-  staff: ["reason", "name", "quota", "json"],
+  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "yes"],
 };
 
 function describeError(err: ApiError): string {
@@ -125,6 +132,31 @@ async function describeIdentity(client: GrimoireClient): Promise<string> {
     }
     throw err;
   }
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Staff commands take a source id or a product name; the name is looked up.
+async function resolveSourceId(client: GrimoireClient, ref: string): Promise<string> {
+  if (UUID_RE.test(ref)) return ref;
+  const match = (await client.listSources()).find((s) => s.product === ref);
+  if (!match) throw new UsageError(`No source with product "${ref}" — run \`grimoire sources\``);
+  return match.id;
+}
+
+function describeSource(detail: SourceDetailOut): string {
+  const frontier = Object.entries(detail.frontier)
+    .map(([status, count]) => `${status}=${count}`)
+    .join(" ");
+  const lines = [
+    `${detail.product}  ${detail.status}  ${detail.base_url}`,
+    `id: ${detail.id}`,
+    `versions: ${detail.versions.length > 0 ? detail.versions.join(", ") : "(not indexed yet)"}`,
+    `include: ${detail.include_patterns.join(" ") || "(all)"}  exclude: ${detail.exclude_patterns.join(" ") || "(none)"}`,
+    `frontier: ${frontier || "(empty)"}`,
+  ];
+  if (detail.descoped_urls > 0) lines.push(`descoped: ${detail.descoped_urls} url(s) marked missing — run reindex to drop their chunks`);
+  return lines.join("\n");
 }
 
 function describeJob(job: JobOut): string {
@@ -282,7 +314,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | recrawl <source_id>';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | source <s> [--include p]... [--exclude p]... [--status active|disabled] | recrawl <s> | reindex <s> | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -295,7 +327,55 @@ async function main(argv: string[]): Promise<number> {
         }
         if (action === "recrawl") {
           if (!jobId) throw new UsageError(usage);
-          process.stdout.write(`${describeJob(await client.recrawlSource(jobId))}\n`);
+          process.stdout.write(`${describeJob(await client.recrawlSource(await resolveSourceId(client, jobId)))}\n`);
+          return EXIT.ok;
+        }
+        if (action === "reindex") {
+          if (!jobId) throw new UsageError(usage);
+          process.stdout.write(`${describeJob(await client.reindexSource(await resolveSourceId(client, jobId)))}\n`);
+          return EXIT.ok;
+        }
+        if (action === "cancel") {
+          if (!jobId) throw new UsageError(usage);
+          process.stdout.write(`${describeJob(await client.cancelJob(jobId))}\n`);
+          return EXIT.ok;
+        }
+        if (action === "jobs") {
+          const sourceRef = args.flags.source?.[0];
+          const found = await client.listJobs({
+            sourceId: sourceRef ? await resolveSourceId(client, sourceRef) : undefined,
+            state: args.flags.state?.[0],
+            kind: args.flags.kind?.[0],
+            limit: intFlag(args, "limit", { min: 1, max: 500 }),
+          });
+          if (json) process.stdout.write(JSON.stringify(found, null, 2) + "\n");
+          else if (found.length === 0) process.stdout.write("no jobs\n");
+          else for (const job of found) process.stdout.write(`${job.created_at}  ${job.id}  ${job.kind}  ${describeJob(job)}\n`);
+          return EXIT.ok;
+        }
+        if (action === "source") {
+          if (!jobId) throw new UsageError(usage);
+          const sourceId = await resolveSourceId(client, jobId);
+          const status = args.flags.status?.[0];
+          if (status !== undefined && status !== "active" && status !== "disabled") throw new UsageError(usage);
+          const edit: SourceScopeIn = {};
+          if (args.flags.include) edit.include_patterns = args.flags.include;
+          if (args.flags.exclude) edit.exclude_patterns = args.flags.exclude;
+          if (status) edit.status = status;
+          const detail =
+            Object.keys(edit).length > 0 ? await client.editSource(sourceId, edit) : await client.sourceDetail(sourceId);
+          process.stdout.write(json ? JSON.stringify(detail, null, 2) + "\n" : `${describeSource(detail)}\n`);
+          return EXIT.ok;
+        }
+        if (action === "purge") {
+          if (!jobId) throw new UsageError(usage);
+          if (!args.bools.has("yes")) {
+            throw new UsageError("purge deletes the source, its crawl state, and every indexed chunk; add --yes to confirm");
+          }
+          const purged = await client.purgeSource(await resolveSourceId(client, jobId));
+          process.stdout.write(
+            `purged ${purged.product}  frontier=${purged.frontier_deleted}  jobs=${purged.jobs_deleted}  chunks removed by ${purged.points_deleted_by}\n`,
+          );
           return EXIT.ok;
         }
         if (action === "users") {

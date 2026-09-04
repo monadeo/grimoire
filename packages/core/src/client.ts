@@ -20,6 +20,9 @@ export type JobOut = Schemas["JobOut"];
 export type MeOut = Schemas["MeOut"];
 export type UserGrantOut = Schemas["UserGrantOut"];
 export type TokenMinted = Schemas["TokenMinted"];
+export type SourceDetailOut = Schemas["SourceDetailOut"];
+export type SourceScopeIn = Schemas["SourceScopeIn"];
+export type PurgeOut = Schemas["PurgeOut"];
 
 export { ApiError } from "./errors.js";
 
@@ -199,6 +202,39 @@ export class GrimoireClient {
 
   recrawlSource(sourceId: string): Promise<JobOut> {
     return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/recrawl`, { method: "POST" });
+  }
+
+  reindexSource(sourceId: string): Promise<JobOut> {
+    return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/reindex`, { method: "POST" });
+  }
+
+  sourceDetail(sourceId: string): Promise<SourceDetailOut> {
+    return this.request<SourceDetailOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}`);
+  }
+
+  editSource(sourceId: string, body: SourceScopeIn): Promise<SourceDetailOut> {
+    return this.request<SourceDetailOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+  }
+
+  purgeSource(sourceId: string): Promise<PurgeOut> {
+    return this.request<PurgeOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}`, { method: "DELETE" });
+  }
+
+  listJobs(filter: { sourceId?: string; state?: string; kind?: string; limit?: number }): Promise<JobOut[]> {
+    const params = new URLSearchParams();
+    if (filter.sourceId) params.set("source_id", filter.sourceId);
+    if (filter.state) params.set("state", filter.state);
+    if (filter.kind) params.set("kind", filter.kind);
+    if (filter.limit !== undefined) params.set("limit", String(filter.limit));
+    const query = params.toString();
+    return this.request<JobOut[]>(`/v1/staff/jobs${query ? `?${query}` : ""}`);
+  }
+
+  cancelJob(jobId: string): Promise<JobOut> {
+    return this.request<JobOut>(`/v1/staff/jobs/${encodeURIComponent(jobId)}/cancel`, { method: "POST" });
   }
 
   rejectJob(jobId: string, reason: string): Promise<JobOut> {

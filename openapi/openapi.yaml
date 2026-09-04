@@ -235,6 +235,35 @@ components:
       - kind
       title: ProbeConfig
       type: object
+    PurgeOut:
+      properties:
+        frontier_deleted:
+          title: Frontier Deleted
+          type: integer
+        jobs_deleted:
+          title: Jobs Deleted
+          type: integer
+        points_deleted_by:
+          enum:
+          - product
+          - url
+          title: Points Deleted By
+          type: string
+        product:
+          title: Product
+          type: string
+        source_id:
+          format: uuid
+          title: Source Id
+          type: string
+      required:
+      - source_id
+      - product
+      - frontier_deleted
+      - jobs_deleted
+      - points_deleted_by
+      title: PurgeOut
+      type: object
     RejectIn:
       properties:
         reason:
@@ -436,10 +465,64 @@ components:
       - text
       title: SearchResult
       type: object
+    SourceDetailOut:
+      properties:
+        base_url:
+          title: Base Url
+          type: string
+        descoped_urls:
+          default: 0
+          title: Descoped Urls
+          type: integer
+        exclude_patterns:
+          items:
+            type: string
+          title: Exclude Patterns
+          type: array
+        frontier:
+          additionalProperties:
+            type: integer
+          title: Frontier
+          type: object
+        id:
+          format: uuid
+          title: Id
+          type: string
+        include_patterns:
+          items:
+            type: string
+          title: Include Patterns
+          type: array
+        product:
+          title: Product
+          type: string
+        status:
+          title: Status
+          type: string
+        versions:
+          items:
+            type: string
+          title: Versions
+          type: array
+      required:
+      - id
+      - product
+      - base_url
+      - status
+      - include_patterns
+      - exclude_patterns
+      - versions
+      - frontier
+      title: SourceDetailOut
+      type: object
     SourceOut:
       properties:
         base_url:
           title: Base Url
+          type: string
+        id:
+          format: uuid
+          title: Id
           type: string
         product:
           title: Product
@@ -453,11 +536,39 @@ components:
           title: Versions
           type: array
       required:
+      - id
       - product
       - base_url
       - status
       - versions
       title: SourceOut
+      type: object
+    SourceScopeIn:
+      description: Staff edit of a source; a field left out stays as it is.
+      properties:
+        exclude_patterns:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Exclude Patterns
+        include_patterns:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Include Patterns
+        status:
+          anyOf:
+          - enum:
+            - active
+            - disabled
+            type: string
+          - type: 'null'
+          title: Status
+      title: SourceScopeIn
       type: object
     SourceSelector:
       properties:
@@ -912,6 +1023,63 @@ paths:
       security:
       - HTTPBearer: []
       summary: List Versions
+  /v1/staff/jobs:
+    get:
+      operationId: list_jobs_v1_staff_jobs_get
+      parameters:
+      - in: query
+        name: source_id
+        required: false
+        schema:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Source Id
+      - in: query
+        name: state
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+      - in: query
+        name: kind
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Kind
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 50
+          maximum: 500
+          minimum: 1
+          title: Limit
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/JobOut'
+                title: Response List Jobs V1 Staff Jobs Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: List Jobs
   /v1/staff/jobs/{job_id}/approve:
     post:
       operationId: approve_job_v1_staff_jobs__job_id__approve_post
@@ -939,6 +1107,37 @@ paths:
       security:
       - HTTPBearer: []
       summary: Approve Job
+  /v1/staff/jobs/{job_id}/cancel:
+    post:
+      description: 'Stop a queued or running crawl or index. A running one stops at
+        its
+
+        next batch and keeps what it already stored.'
+      operationId: cancel_job_v1_staff_jobs__job_id__cancel_post
+      parameters:
+      - in: path
+        name: job_id
+        required: true
+        schema:
+          format: uuid
+          title: Job Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Cancel Job
   /v1/staff/jobs/{job_id}/reject:
     post:
       operationId: reject_job_v1_staff_jobs__job_id__reject_post
@@ -1013,8 +1212,104 @@ paths:
       security:
       - HTTPBearer: []
       summary: Review Queue
+  /v1/staff/sources/{source_id}:
+    delete:
+      description: 'Remove a source and everything indexed from it. Stored crawl artifacts
+
+        on disk are left for the operator to clean.'
+      operationId: purge_source_v1_staff_sources__source_id__delete
+      parameters:
+      - in: path
+        name: source_id
+        required: true
+        schema:
+          format: uuid
+          title: Source Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Purge Source
+    get:
+      operationId: source_detail_v1_staff_sources__source_id__get
+      parameters:
+      - in: path
+        name: source_id
+        required: true
+        schema:
+          format: uuid
+          title: Source Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceDetailOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Source Detail
+    patch:
+      description: 'Change scope or status. Frontier URLs that fall out of the new
+        scope
+
+        are marked missing, so the next index run drops their chunks.'
+      operationId: edit_source_v1_staff_sources__source_id__patch
+      parameters:
+      - in: path
+        name: source_id
+        required: true
+        schema:
+          format: uuid
+          title: Source Id
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceScopeIn'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceDetailOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Edit Source
   /v1/staff/sources/{source_id}/recrawl:
     post:
+      description: 'Restart the crawl from the base URL; an open crawl or index of
+        the
+
+        source is cancelled first so two runs never interleave.'
       operationId: recrawl_source_v1_staff_sources__source_id__recrawl_post
       parameters:
       - in: path
@@ -1040,6 +1335,37 @@ paths:
       security:
       - HTTPBearer: []
       summary: Recrawl Source
+  /v1/staff/sources/{source_id}/reindex:
+    post:
+      description: 'Index the stored crawl again without fetching: after a failed
+        index
+
+        run or a scope change.'
+      operationId: reindex_source_v1_staff_sources__source_id__reindex_post
+      parameters:
+      - in: path
+        name: source_id
+        required: true
+        schema:
+          format: uuid
+          title: Source Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Reindex Source
   /v1/staff/tokens:
     post:
       operationId: mint_token_v1_staff_tokens_post
@@ -1078,7 +1404,7 @@ paths:
                 title: Response List Users V1 Staff Users Get
                 type: array
           description: Successful Response
-      security: &id001
+      security:
       - HTTPBearer: []
       summary: List Users
     post:
@@ -1096,13 +1422,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserGrantOut'
           description: Successful Response
-        '422': &id002
+        '422':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
-      security: *id001
+      security:
+      - HTTPBearer: []
       summary: Grant User
   /v1/staff/users/{subject}:
     delete:
@@ -1121,6 +1448,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserGrantOut'
           description: Successful Response
-        '422': *id002
-      security: *id001
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
       summary: Revoke User

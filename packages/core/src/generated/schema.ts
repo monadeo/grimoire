@@ -158,6 +158,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/staff/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Jobs */
+        get: operations["list_jobs_v1_staff_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/staff/jobs/{job_id}/approve": {
         parameters: {
             query?: never;
@@ -169,6 +186,27 @@ export interface paths {
         put?: never;
         /** Approve Job */
         post: operations["approve_job_v1_staff_jobs__job_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/staff/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Job
+         * @description Stop a queued or running crawl or index. A running one stops at its
+         *     next batch and keeps what it already stored.
+         */
+        post: operations["cancel_job_v1_staff_jobs__job_id__cancel_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -226,6 +264,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/staff/sources/{source_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Source Detail */
+        get: operations["source_detail_v1_staff_sources__source_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Purge Source
+         * @description Remove a source and everything indexed from it. Stored crawl artifacts
+         *     on disk are left for the operator to clean.
+         */
+        delete: operations["purge_source_v1_staff_sources__source_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit Source
+         * @description Change scope or status. Frontier URLs that fall out of the new scope
+         *     are marked missing, so the next index run drops their chunks.
+         */
+        patch: operations["edit_source_v1_staff_sources__source_id__patch"];
+        trace?: never;
+    };
     "/v1/staff/sources/{source_id}/recrawl": {
         parameters: {
             query?: never;
@@ -235,8 +300,33 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Recrawl Source */
+        /**
+         * Recrawl Source
+         * @description Restart the crawl from the base URL; an open crawl or index of the
+         *     source is cancelled first so two runs never interleave.
+         */
         post: operations["recrawl_source_v1_staff_sources__source_id__recrawl_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/staff/sources/{source_id}/reindex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reindex Source
+         * @description Index the stored crawl again without fetching: after a failed index
+         *     run or a scope change.
+         */
+        post: operations["reindex_source_v1_staff_sources__source_id__reindex_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -417,6 +507,25 @@ export interface components {
             /** Url */
             url?: string | null;
         };
+        /** PurgeOut */
+        PurgeOut: {
+            /** Frontier Deleted */
+            frontier_deleted: number;
+            /** Jobs Deleted */
+            jobs_deleted: number;
+            /**
+             * Points Deleted By
+             * @enum {string}
+             */
+            points_deleted_by: "product" | "url";
+            /** Product */
+            product: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+        };
         /** RejectIn */
         RejectIn: {
             /** Reason */
@@ -517,16 +626,62 @@ export interface components {
             /** Version */
             version: string;
         };
-        /** SourceOut */
-        SourceOut: {
+        /** SourceDetailOut */
+        SourceDetailOut: {
             /** Base Url */
             base_url: string;
+            /**
+             * Descoped Urls
+             * @default 0
+             */
+            descoped_urls: number;
+            /** Exclude Patterns */
+            exclude_patterns: string[];
+            /** Frontier */
+            frontier: {
+                [key: string]: number;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Include Patterns */
+            include_patterns: string[];
             /** Product */
             product: string;
             /** Status */
             status: string;
             /** Versions */
             versions: string[];
+        };
+        /** SourceOut */
+        SourceOut: {
+            /** Base Url */
+            base_url: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Product */
+            product: string;
+            /** Status */
+            status: string;
+            /** Versions */
+            versions: string[];
+        };
+        /**
+         * SourceScopeIn
+         * @description Staff edit of a source; a field left out stays as it is.
+         */
+        SourceScopeIn: {
+            /** Exclude Patterns */
+            exclude_patterns?: string[] | null;
+            /** Include Patterns */
+            include_patterns?: string[] | null;
+            /** Status */
+            status?: ("active" | "disabled") | null;
         };
         /** SourceSelector */
         SourceSelector: {
@@ -933,7 +1088,72 @@ export interface operations {
             };
         };
     };
+    list_jobs_v1_staff_jobs_get: {
+        parameters: {
+            query?: {
+                source_id?: string | null;
+                state?: string | null;
+                kind?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     approve_job_v1_staff_jobs__job_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_job_v1_staff_jobs__job_id__cancel_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1052,7 +1272,135 @@ export interface operations {
             };
         };
     };
+    source_detail_v1_staff_sources__source_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purge_source_v1_staff_sources__source_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_source_v1_staff_sources__source_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourceScopeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     recrawl_source_v1_staff_sources__source_id__recrawl_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reindex_source_v1_staff_sources__source_id__reindex_post: {
         parameters: {
             query?: never;
             header?: never;
