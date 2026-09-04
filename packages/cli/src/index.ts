@@ -106,6 +106,8 @@ function describeSource(detail: SourceDetailOut): string {
     `versions: ${detail.versions.length > 0 ? detail.versions.join(", ") : "(not indexed yet)"}`,
     `include: ${detail.include_patterns.join(" ") || "(all)"}  exclude: ${detail.exclude_patterns.join(" ") || "(none)"}`,
     `frontier: ${frontier || "(empty)"}`,
+    `indexed: ${detail.indexed_pages} page(s) at the current config`,
+    `job: ${detail.job ? `${detail.job.kind} ${describeJob(detail.job)}` : "none running"}`,
   ];
   if (detail.descoped_urls > 0) lines.push(`descoped: ${detail.descoped_urls} url(s) marked missing — run reindex to drop their chunks`);
   return lines.join("\n");
@@ -270,7 +272,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | source <s> [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] | recrawl <s> | reindex <s> | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] | recrawl <s> | reindex <s> | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -325,6 +327,7 @@ async function main(argv: string[]): Promise<number> {
         if (action === "source") {
           if (!jobId) throw new UsageError(usage);
           const sourceId = await resolveSourceId(client, jobId);
+          if (args.bools.has("watch")) return watchSource(client, sourceId);
           const status = args.flags.status?.[0];
           if (status !== undefined && status !== "active" && status !== "disabled") throw new UsageError(usage);
           const markdown = args.flags.markdown?.[0];
@@ -421,6 +424,32 @@ const WATCH_DEADLINE_MS = 30 * 60_000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+async function watchSource(client: GrimoireClient, sourceId: string): Promise<number> {
+  // An ingest runs for hours; print a line only when something moved, so the
+  // terminal stays readable and a stall is obvious.
+  const deadline = Date.now() + WATCH_DEADLINE_MS;
+  let last = "";
+  while (Date.now() < deadline) {
+    try {
+      const detail = await client.sourceDetail(sourceId);
+      const line = describeSource(detail);
+      if (line !== last) {
+        process.stdout.write(`${line}\n\n`);
+        last = line;
+      }
+      if (!detail.job) return EXIT.ok;
+      await sleep(WATCH_POLL_MS);
+    } catch (err) {
+      if (err instanceof ApiError && [401, 403, 404].includes(err.status)) throw err;
+      const reason = err instanceof Error ? err.message : String(err);
+      process.stderr.write(`poll failed (${reason}); retrying\n`);
+      await sleep(WATCH_POLL_MS);
+    }
+  }
+  process.stderr.write("stopped watching; the job is still running\n");
+  return EXIT.ok;
 }
 
 async function watchJob(client: GrimoireClient, jobId: string): Promise<number> {

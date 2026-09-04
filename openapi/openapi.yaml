@@ -169,10 +169,6 @@ components:
           format: date-time
           title: Created At
           type: string
-        stalled:
-          default: false
-          title: Stalled
-          type: boolean
         id:
           format: uuid
           title: Id
@@ -191,6 +187,10 @@ components:
             type: string
           - type: 'null'
           title: Source Id
+        stalled:
+          default: false
+          title: Stalled
+          type: boolean
         state:
           title: State
           type: string
@@ -508,9 +508,6 @@ components:
         base_url:
           title: Base Url
           type: string
-        page_markdown:
-          title: Page Markdown
-          type: boolean
         descoped_urls:
           default: 0
           title: Descoped Urls
@@ -534,6 +531,16 @@ components:
             type: string
           title: Include Patterns
           type: array
+        indexed_pages:
+          title: Indexed Pages
+          type: integer
+        job:
+          anyOf:
+          - $ref: '#/components/schemas/JobOut'
+          - type: 'null'
+        page_markdown:
+          title: Page Markdown
+          type: boolean
         product:
           title: Product
           type: string
@@ -555,6 +562,8 @@ components:
       - exclude_patterns
       - versions
       - frontier
+      - indexed_pages
+      - job
       title: SourceDetailOut
       type: object
     SourceOut:
@@ -1389,7 +1398,8 @@ paths:
               schema:
                 items:
                   $ref: '#/components/schemas/FrontierUrlOut'
-                title: Response List Frontier V1 Staff Sources  Source Id  Frontier Get
+                title: Response List Frontier V1 Staff Sources  Source Id  Frontier
+                  Get
                 type: array
           description: Successful Response
         '422':

@@ -68,7 +68,7 @@ These need a staff account.
 | `grimoire staff reject <job_id> --reason "..."` | Reject one |
 | `grimoire staff jobs [--source <product\|id>] [--state <state>] [--kind <kind>] [--limit 50] [--json]` | Recent jobs with their failure reasons |
 | `grimoire staff cancel <job_id>` | Stop a queued or running crawl or index |
-| `grimoire staff source <product\|id> [--json]` | Crawl route, scope, versions, frontier counts |
+| `grimoire staff source <product\|id> [--watch] [--json]` | Where a source stands: route, scope, versions, crawl state, pages indexed, and the job it is in. `--watch` prints a line whenever that changes, until the job ends. |
 | `grimoire staff urls <product\|id> [--state <crawl state>] [--limit 50] [--json]` | Every URL of a source with its crawl state, failures first and why |
 | `grimoire staff source <product\|id> [--include <pattern>]... [--exclude <pattern>]... [--status active\|disabled] [--markdown on\|off]` | Change what a source covers and how it is fetched |
 | `grimoire staff recrawl <product\|id>` | Fetch the site again |

@@ -494,11 +494,6 @@ export interface components {
              */
             created_at: string;
             /**
-             * Stalled
-             * @default false
-             */
-            stalled: boolean;
-            /**
              * Id
              * Format: uuid
              */
@@ -509,6 +504,11 @@ export interface components {
             reason: string | null;
             /** Source Id */
             source_id: string | null;
+            /**
+             * Stalled
+             * @default false
+             */
+            stalled: boolean;
             /** State */
             state: string;
             /**
@@ -671,8 +671,6 @@ export interface components {
         SourceDetailOut: {
             /** Base Url */
             base_url: string;
-            /** Page Markdown */
-            page_markdown: boolean;
             /**
              * Descoped Urls
              * @default 0
@@ -691,6 +689,11 @@ export interface components {
             id: string;
             /** Include Patterns */
             include_patterns: string[];
+            /** Indexed Pages */
+            indexed_pages: number;
+            job: components["schemas"]["JobOut"] | null;
+            /** Page Markdown */
+            page_markdown: boolean;
             /** Product */
             product: string;
             /** Status */
