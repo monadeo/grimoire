@@ -28,6 +28,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire staff cancel <job_id>
   grimoire staff source <product|id> [--json]
   grimoire staff source <product|id> [--include <pattern>]... [--exclude <pattern>]... [--status active|disabled] [--markdown on|off]
+  grimoire staff urls <product|id> [--state <crawl state>] [--limit 50] [--json]
   grimoire staff recrawl <product|id> | reindex <product|id> | purge <product|id> --yes
   grimoire mcp [--http]
   grimoire help | --help | -h

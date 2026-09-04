@@ -291,6 +291,27 @@ export interface paths {
         patch: operations["edit_source_v1_staff_sources__source_id__patch"];
         trace?: never;
     };
+    "/v1/staff/sources/{source_id}/frontier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Frontier
+         * @description The crawl state of a source's URLs, newest failures first: which
+         *     pages failed and why.
+         */
+        get: operations["list_frontier_v1_staff_sources__source_id__frontier_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/staff/sources/{source_id}/recrawl": {
         parameters: {
             query?: never;
@@ -439,6 +460,19 @@ export interface components {
             title: string | null;
             /** Version */
             version: string;
+        };
+        /** FrontierUrlOut */
+        FrontierUrlOut: {
+            /** Attempts */
+            attempts: number;
+            /** Fetched At */
+            fetched_at: string | null;
+            /** Last Error */
+            last_error: string | null;
+            /** Status */
+            status: string;
+            /** Url */
+            url: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1362,6 +1396,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SourceDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_frontier_v1_staff_sources__source_id__frontier_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrontierUrlOut"][];
                 };
             };
             /** @description Validation Error */

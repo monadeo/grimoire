@@ -69,6 +69,7 @@ These need a staff account.
 | `grimoire staff jobs [--source <product\|id>] [--state <state>] [--kind <kind>] [--limit 50] [--json]` | Recent jobs with their failure reasons |
 | `grimoire staff cancel <job_id>` | Stop a queued or running crawl or index |
 | `grimoire staff source <product\|id> [--json]` | Crawl route, scope, versions, frontier counts |
+| `grimoire staff urls <product\|id> [--state <crawl state>] [--limit 50] [--json]` | Every URL of a source with its crawl state, failures first and why |
 | `grimoire staff source <product\|id> [--include <pattern>]... [--exclude <pattern>]... [--status active\|disabled] [--markdown on\|off]` | Change what a source covers and how it is fetched |
 | `grimoire staff recrawl <product\|id>` | Fetch the site again |
 | `grimoire staff reindex <product\|id>` | Index the stored crawl again, no fetching |

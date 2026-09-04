@@ -47,4 +47,5 @@ export {
   type SourceDetailOut,
   type SourceScopeIn,
   type PurgeOut,
+  type FrontierUrlOut,
 } from "./client.js";

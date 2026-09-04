@@ -268,7 +268,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | source <s> [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] | recrawl <s> | reindex <s> | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | source <s> [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] | recrawl <s> | reindex <s> | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -277,6 +277,19 @@ async function main(argv: string[]): Promise<number> {
           // The plain token is shown exactly once; the server keeps only its hash.
           process.stderr.write(`token ${minted.id}  ${minted.name}  quota ${minted.quota_per_day}/day — shown once, store it now\n`);
           process.stdout.write(`${minted.token}\n`);
+          return EXIT.ok;
+        }
+        if (action === "urls") {
+          if (!jobId) throw new UsageError(usage);
+          const urls = await client.listFrontier(await resolveSourceId(client, jobId), {
+            status: args.flags.state?.[0],
+            limit: intFlag(args, "limit", { min: 1, max: 500 }),
+          });
+          if (json) process.stdout.write(JSON.stringify(urls, null, 2) + "\n");
+          else if (urls.length === 0) process.stdout.write("no urls\n");
+          else
+            for (const u of urls)
+              process.stdout.write(`${u.status}  ${u.url}${u.last_error ? `  — ${u.last_error}` : ""}\n`);
           return EXIT.ok;
         }
         if (action === "recrawl") {

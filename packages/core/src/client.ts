@@ -23,6 +23,7 @@ export type TokenMinted = Schemas["TokenMinted"];
 export type SourceDetailOut = Schemas["SourceDetailOut"];
 export type SourceScopeIn = Schemas["SourceScopeIn"];
 export type PurgeOut = Schemas["PurgeOut"];
+export type FrontierUrlOut = Schemas["FrontierUrlOut"];
 
 export { ApiError } from "./errors.js";
 
@@ -202,6 +203,16 @@ export class GrimoireClient {
 
   recrawlSource(sourceId: string): Promise<JobOut> {
     return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/recrawl`, { method: "POST" });
+  }
+
+  listFrontier(sourceId: string, filter: { status?: string; limit?: number } = {}): Promise<FrontierUrlOut[]> {
+    const params = new URLSearchParams();
+    if (filter.status) params.set("status", filter.status);
+    if (filter.limit !== undefined) params.set("limit", String(filter.limit));
+    const query = params.toString();
+    return this.request<FrontierUrlOut[]>(
+      `/v1/staff/sources/${encodeURIComponent(sourceId)}/frontier${query ? `?${query}` : ""}`,
+    );
   }
 
   reindexSource(sourceId: string): Promise<JobOut> {

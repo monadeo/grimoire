@@ -111,6 +111,36 @@ components:
       - text
       title: DocWindowOut
       type: object
+    FrontierUrlOut:
+      properties:
+        attempts:
+          title: Attempts
+          type: integer
+        fetched_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Fetched At
+        last_error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Error
+        status:
+          title: Status
+          type: string
+        url:
+          title: Url
+          type: string
+      required:
+      - url
+      - status
+      - attempts
+      - last_error
+      - fetched_at
+      title: FrontierUrlOut
+      type: object
     HTTPValidationError:
       properties:
         detail:
@@ -1317,6 +1347,56 @@ paths:
       security:
       - HTTPBearer: []
       summary: Edit Source
+  /v1/staff/sources/{source_id}/frontier:
+    get:
+      description: 'The crawl state of a source''s URLs, newest failures first: which
+
+        pages failed and why.'
+      operationId: list_frontier_v1_staff_sources__source_id__frontier_get
+      parameters:
+      - in: path
+        name: source_id
+        required: true
+        schema:
+          format: uuid
+          title: Source Id
+          type: string
+      - in: query
+        name: status
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 50
+          maximum: 500
+          minimum: 1
+          title: Limit
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/FrontierUrlOut'
+                title: Response List Frontier V1 Staff Sources  Source Id  Frontier Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: List Frontier
   /v1/staff/sources/{source_id}/recrawl:
     post:
       description: 'Restart the crawl from the base URL; an open crawl or index of
