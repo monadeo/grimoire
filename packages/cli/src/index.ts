@@ -5,6 +5,7 @@ import {
   GrimoireClient,
   ApiError,
   browserLogin,
+  fetchAuthConfig,
   clearSession,
   readSession,
   readMachineToken,
@@ -222,7 +223,9 @@ async function main(argv: string[]): Promise<number> {
           process.stderr.write("not logged in — run `grimoire login`\n");
           return EXIT.authRequired;
         }
+        const authConfig = await fetchAuthConfig(loadGlobalConfig().apiBaseUrl);
         process.stdout.write(`${await describeIdentity(client)}  via ${via}\n`);
+        process.stdout.write(`server ${authConfig.server_version ?? "(older than 0.10.2)"}  ${loadGlobalConfig().apiBaseUrl}\n`);
         return EXIT.ok;
       }
       case "search": {

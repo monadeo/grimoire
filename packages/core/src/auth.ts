@@ -88,6 +88,8 @@ export interface AuthConfig {
   supabase_anon_key: string;
   oauth_provider: string;
   redirect_urls: string[];
+  /** Absent on servers older than 0.10.2. */
+  server_version?: string;
 }
 
 export interface TokenResponse {
@@ -117,6 +119,7 @@ export async function fetchAuthConfig(apiBase: string): Promise<AuthConfig> {
     supabase_anon_key: body.supabase_anon_key,
     oauth_provider: body.oauth_provider,
     redirect_urls: body.redirect_urls.map(String),
+    server_version: typeof body.server_version === "string" ? body.server_version : undefined,
   };
 }
 

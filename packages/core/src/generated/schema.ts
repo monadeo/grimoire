@@ -395,6 +395,8 @@ export interface components {
             oauth_provider: string;
             /** Redirect Urls */
             redirect_urls: string[];
+            /** Server Version */
+            server_version: string;
             /** Supabase Anon Key */
             supabase_anon_key: string;
             /** Supabase Url */

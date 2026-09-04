@@ -10,6 +10,9 @@ components:
             type: string
           title: Redirect Urls
           type: array
+        server_version:
+          title: Server Version
+          type: string
         supabase_anon_key:
           title: Supabase Anon Key
           type: string
@@ -21,6 +24,7 @@ components:
       - supabase_anon_key
       - oauth_provider
       - redirect_urls
+      - server_version
       title: AuthConfigOut
       type: object
     Candidate:
