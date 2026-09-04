@@ -18,6 +18,7 @@ import {
   type SourceSelector,
 } from "@monadeo.com/grimoire-core";
 import { parseArgs, requirePositional, requireFlagOneOf, intFlag, UsageError } from "./args.js";
+import { COMMAND_FLAGS, HELP, VERSION } from "./help.js";
 import { printResults, printCompact, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
@@ -57,57 +58,6 @@ function toSelectors(pins: SourcePin[]): SourceSelector[] {
 
 // Injected by esbuild from package.json at build time ("dev" when running
 // unbundled source, e.g. under vitest).
-declare const __GRIMOIRE_VERSION__: string | undefined;
-const VERSION = typeof __GRIMOIRE_VERSION__ === "string" ? __GRIMOIRE_VERSION__ : "dev";
-
-const HELP = `grimoire ${VERSION} — documentation retrieval for AI agents
-
-  grimoire login [--no-launch-browser] | logout | whoami
-  grimoire setup <claude-code|cursor|windsurf|codex>
-  grimoire init
-  grimoire search "<query>" [-s nextjs@15 -s react] [--json|--compact] [--debug]
-  grimoire sources [--q <kw>] [--names|--json]
-  grimoire versions <product> [--json]
-  grimoire config [<key>] [<value>] [--unset]
-  grimoire update
-  grimoire doc <point_id> [--window 2] [--json]
-  grimoire report <point_id> --verdict helpful|incorrect|outdated [--note "..."]
-  grimoire ingest <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo>)
-                        [--include <pattern>]... [--exclude <pattern>]... [--watch]
-  grimoire jobs <job_id> [--watch]
-  grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."
-  grimoire staff users [--json] | grant <subject> --name "..." | revoke <subject>
-  grimoire staff token <name> --quota <per-day>
-  grimoire staff jobs [--source <product|id>] [--state <state>] [--kind <kind>] [--limit 50] [--json]
-  grimoire staff cancel <job_id>
-  grimoire staff source <product|id> [--json]
-  grimoire staff source <product|id> [--include <pattern>]... [--exclude <pattern>]... [--status active|disabled]
-  grimoire staff recrawl <product|id> | reindex <product|id> | purge <product|id> --yes
-  grimoire mcp [--http]
-  grimoire help | --help | -h
-  grimoire version | --version | -v
-
-  env: GRIMOIRE_AUTH_TOKEN — machine token (CI, instead of login)
-       GRIMOIRE_API_URL   — API origin without a path
-`;
-
-// Canonical flag names each command accepts; parseArgs rejects anything else.
-const COMMAND_FLAGS: Record<string, readonly string[]> = {
-  version: [], "--version": [], "-v": [],
-  login: ["no-launch-browser"], logout: [], setup: [], init: [], whoami: [],
-  help: [], "--help": [], "-h": [],
-  mcp: ["http"],
-  config: ["unset"],
-  update: [],
-  search: ["source", "json", "compact", "debug"],
-  sources: ["q", "names", "json"],
-  versions: ["json"],
-  doc: ["window", "json"],
-  report: ["verdict", "note"],
-  ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "include", "exclude", "watch"],
-  jobs: ["watch"],
-  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "yes"],
-};
 
 function describeError(err: ApiError): string {
   const detail =
@@ -152,6 +102,7 @@ function describeSource(detail: SourceDetailOut): string {
   const lines = [
     `${detail.product}  ${detail.status}  ${detail.base_url}`,
     `id: ${detail.id}`,
+    `route: ${detail.page_markdown ? "published page markdown" : "browser crawl"}`,
     `versions: ${detail.versions.length > 0 ? detail.versions.join(", ") : "(not indexed yet)"}`,
     `include: ${detail.include_patterns.join(" ") || "(all)"}  exclude: ${detail.exclude_patterns.join(" ") || "(none)"}`,
     `frontier: ${frontier || "(empty)"}`,
@@ -317,7 +268,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | source <s> [--include p]... [--exclude p]... [--status active|disabled] | recrawl <s> | reindex <s> | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | source <s> [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] | recrawl <s> | reindex <s> | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -361,10 +312,13 @@ async function main(argv: string[]): Promise<number> {
           const sourceId = await resolveSourceId(client, jobId);
           const status = args.flags.status?.[0];
           if (status !== undefined && status !== "active" && status !== "disabled") throw new UsageError(usage);
+          const markdown = args.flags.markdown?.[0];
+          if (markdown !== undefined && markdown !== "on" && markdown !== "off") throw new UsageError(usage);
           const edit: SourceScopeIn = {};
           if (args.flags.include) edit.include_patterns = args.flags.include;
           if (args.flags.exclude) edit.exclude_patterns = args.flags.exclude;
           if (status) edit.status = status;
+          if (markdown) edit.page_markdown = markdown === "on";
           const detail =
             Object.keys(edit).length > 0 ? await client.editSource(sourceId, edit) : await client.sourceDetail(sourceId);
           process.stdout.write(json ? JSON.stringify(detail, null, 2) + "\n" : `${describeSource(detail)}\n`);

@@ -632,6 +632,8 @@ export interface components {
         SourceDetailOut: {
             /** Base Url */
             base_url: string;
+            /** Page Markdown */
+            page_markdown: boolean;
             /**
              * Descoped Urls
              * @default 0
@@ -682,6 +684,8 @@ export interface components {
             exclude_patterns?: string[] | null;
             /** Include Patterns */
             include_patterns?: string[] | null;
+            /** Page Markdown */
+            page_markdown?: boolean | null;
             /** Status */
             status?: ("active" | "disabled") | null;
         };

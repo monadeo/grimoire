@@ -26,7 +26,7 @@ grimoire setup claude-code               # wire the MCP server into your agent
 | Package | What |
 |---|---|
 | `@monadeo.com/grimoire-core` | Typed API client, Supabase Auth login, config (`.grimoire.json`) |
-| `@monadeo.com/grimoire-cli` | `grimoire` command — search, sources, ingest, setup, init |
+| `@monadeo.com/grimoire-cli` | `grimoire` command — search, sources, ingest, setup, init, staff operations ([reference](packages/cli/README.md)) |
 | `@monadeo.com/grimoire-mcp` | MCP server (`npx @monadeo.com/grimoire-mcp`), stdio + streamable HTTP |
 
 ## MCP tools

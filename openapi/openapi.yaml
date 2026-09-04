@@ -474,6 +474,9 @@ components:
         base_url:
           title: Base Url
           type: string
+        page_markdown:
+          title: Page Markdown
+          type: boolean
         descoped_urls:
           default: 0
           title: Descoped Urls
@@ -513,6 +516,7 @@ components:
       - product
       - base_url
       - status
+      - page_markdown
       - include_patterns
       - exclude_patterns
       - versions
@@ -564,6 +568,11 @@ components:
             type: array
           - type: 'null'
           title: Include Patterns
+        page_markdown:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Page Markdown
         status:
           anyOf:
           - enum:
