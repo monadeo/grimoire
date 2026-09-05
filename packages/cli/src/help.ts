@@ -18,7 +18,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire update
   grimoire doc <point_id> [--window 2] [--json]
   grimoire report <point_id> --verdict helpful|incorrect|outdated [--note "..."]
-  grimoire ingest <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo>)
+  grimoire ingest <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>])
                         [--include <pattern>]... [--exclude <pattern>]... [--watch]
   grimoire jobs <job_id> [--watch]
   grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..."
@@ -30,7 +30,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire staff source <product|id> [--include <pattern>]... [--exclude <pattern>]... [--status active|disabled] [--markdown on|off]
   grimoire staff source <product|id> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo>)
   grimoire staff urls <product|id> [--state <crawl state>] [--limit 50] [--json]
-  grimoire staff create <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo>) [--include <pattern>]... [--exclude <pattern>]...
+  grimoire staff create <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]...
   grimoire staff upload <product|id> <page-url> <file.html>
   grimoire staff recrawl <product|id> | reindex <product|id> | purge <product|id> --yes
   grimoire mcp [--http]
@@ -54,7 +54,7 @@ export const COMMAND_FLAGS: Record<string, readonly string[]> = {
   versions: ["json"],
   doc: ["window", "json"],
   report: ["verdict", "note"],
-  ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "include", "exclude", "watch"],
+  ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "include", "exclude", "watch"],
   jobs: ["watch"],
-  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "yes", "watch", "rolling", "fixed", "npm", "pypi", "github", "staff", "product"],
+  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "yes", "watch", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "staff", "product"],
 };

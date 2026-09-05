@@ -105,7 +105,10 @@ function versioningFromArgs(args: ParsedArgs): Partial<SourceScopeIn> {
   if (fixed) return { version_rule: { kind: "fixed", value: fixed } };
   if (npm) return { version_rule: { kind: "fixed" }, probe: { kind: "npm", package: npm } };
   if (pypi) return { version_rule: { kind: "fixed" }, probe: { kind: "pypi", package: pypi } };
-  if (github) return { version_rule: { kind: "fixed" }, probe: { kind: "github", repo: github } };
+  if (github) {
+    const tagPattern = args.flags["tag-pattern"]?.[0];
+    return { version_rule: { kind: "fixed" }, probe: { kind: "github", repo: github, ...(tagPattern ? { tag_pattern: tagPattern } : {}) } };
+  }
   return {};
 }
 

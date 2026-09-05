@@ -51,11 +51,13 @@ token instead of logging in. `GRIMOIRE_API_URL` overrides the API origin.
 
 | Command | What it does |
 |---|---|
-| `grimoire ingest <url> --product <name> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo>) [--include <pattern>]... [--exclude <pattern>]... [--watch]` | Submit a documentation site |
+| `grimoire ingest <url> --product <name> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]... [--watch]` | Submit a documentation site |
 | `grimoire jobs <job_id> [--watch]` | Follow one job |
 
 Every source needs a version rule: `--rolling` for docs without releases, otherwise the
-release probe that tells Grimoire when a new version ships.
+release probe that tells Grimoire when a new version ships. When a GitHub release tag is
+not a plain `v1.2.3`, give `--tag-pattern` a regular expression whose first group is the
+version, for example `--tag-pattern 'release-(\d+\.\d+\.\d+)'` for nginx.
 
 ## Staff
 

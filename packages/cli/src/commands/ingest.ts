@@ -3,7 +3,7 @@ import { UsageError, type ParsedArgs } from "../args.js";
 
 export function submissionFromArgs(url: string, args: ParsedArgs): SubmissionIn {
   const usage =
-    "Usage: grimoire ingest <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo>)";
+    "Usage: grimoire ingest <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>])";
   const product = args.flags.product?.[0];
   if (!product) throw new UsageError(usage);
   const fixed = args.flags.fixed?.[0];
@@ -24,7 +24,16 @@ export function submissionFromArgs(url: string, args: ParsedArgs): SubmissionIn 
   if (fixed) return { ...body, version_rule: { kind: "fixed", value: fixed } };
   if (npm) return { ...body, version_rule: { kind: "fixed" }, probe: { kind: "npm", package: npm } };
   if (pypi) return { ...body, version_rule: { kind: "fixed" }, probe: { kind: "pypi", package: pypi } };
-  if (github) return { ...body, version_rule: { kind: "fixed" }, probe: { kind: "github", repo: github } };
+  if (github) {
+    // A release tag like `release-1.31.5` or `docker-v29.8.0` needs the pattern
+    // whose first group is the version; a plain `v1.2.3` needs nothing.
+    const tagPattern = args.flags["tag-pattern"]?.[0];
+    return {
+      ...body,
+      version_rule: { kind: "fixed" },
+      probe: { kind: "github", repo: github, ...(tagPattern ? { tag_pattern: tagPattern } : {}) },
+    };
+  }
   throw new UsageError(`${usage}\nA version rule is mandatory: --rolling for unversioned docs, --fixed, or a release probe.`);
 }
 
