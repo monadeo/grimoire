@@ -18,7 +18,7 @@ grimoire setup claude-code   # wire the MCP server into your agent
 |---|---|
 | `grimoire login [--no-launch-browser]` | Single sign-on, then prints the account it logged in as |
 | `grimoire logout` | Forgets the stored session |
-| `grimoire whoami` | Account, grant status, quota, and the server version behind the API |
+| `grimoire whoami` | Account, grant status, quota, the rerankers you may pick, and the server version behind the API |
 | `grimoire version` | Client version |
 
 Login is OAuth Authorization Code with PKCE through Supabase Auth. It always prints the
@@ -38,9 +38,9 @@ Ask your administrator, quoting the subject that `grimoire login` prints.
 | Command | What it does |
 |---|---|
 | `grimoire search "<query>" [-s nextjs@15 -s react] [--reranker <name>] [--json\|--compact] [--debug] [--verbose]` | Search one or more sources. `--reranker` picks one of the rerankers `grimoire whoami` lists for your account; `--verbose` prints on stderr how long each stage took and which reranker ran. |
-| `grimoire sources [--q <keyword>] [--names\|--json]` | List sources with version, stage and URL; sources still in progress come first. Stages: waiting to crawl, crawling n/m pages, waiting to index, indexing n/m pages, indexed with its date, failed, cancelled |
+| `grimoire sources [-q <keyword>] [--names\|--json]` | List sources with version, stage and URL; sources still in progress come first. Stages: waiting to crawl, crawling n/m pages, waiting to index, indexing n/m pages, indexed with its date, failed, cancelled |
 | `grimoire versions <product> [--json]` | Versions indexed for a product, with chunk count and the date each was indexed |
-| `grimoire doc <point_id> [--window 2] [--json]` | A chunk with its neighbours |
+| `grimoire doc <point_id> [--window 0-5] [--json]` | A chunk with its neighbours; the window is how many chunks each side, 2 by default |
 | `grimoire report <point_id> --verdict helpful\|incorrect\|outdated [--note "..."]` | Tell us a result was wrong |
 
 ## Agents and setup
@@ -49,8 +49,8 @@ Ask your administrator, quoting the subject that `grimoire login` prints.
 |---|---|
 | `grimoire setup <claude-code\|cursor\|windsurf\|codex>` | Wire the MCP server into an agent |
 | `grimoire init` | Write a project `.grimoire.json` with default sources |
-| `grimoire config [<key>] [<value>] [--unset]` | Read or change client config: `api-url`, `update-check-hours`, `reranker`, `auth-token` |
-| `grimoire mcp [--http]` | Run the MCP server on stdio, or over HTTP |
+| `grimoire config [<key>] [<value>] [--unset]` | Read or change client config: `api-url`, `update-check-hours`, `reranker`, `auth-token`. With no `reranker` set, the server picks its default |
+| `grimoire mcp [--http]` | Print the command that starts the MCP server; the server itself is `@monadeo.com/grimoire-mcp` |
 | `grimoire update` | Update the client in place |
 
 ## Ingestion
@@ -79,8 +79,8 @@ These need a staff account.
 | `grimoire staff source <product\|id> [--watch] [--json]` | Where a source stands: route, scope, versions, crawl state, pages indexed, and the job it is in. `--watch` prints a line whenever that changes, until the job ends. |
 | `grimoire staff urls <product\|id> [--state <crawl state>] [--limit 50] [--json]` | Every URL of a source with its crawl state, failures first and why |
 | `grimoire staff source <product\|id> [--include <pattern>]... [--exclude <pattern>]... [--status active\|disabled] [--markdown on\|off]` | Change what a source covers and how it is fetched |
-| `grimoire staff source <product\|id> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo>)` | Correct how a source reads its version. Drops the chunks under the old label and reindexes from the stored crawl. |
-| `grimoire staff create <url> --product <name> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo>) [--include <pattern>]... [--exclude <pattern>]...` | Register a source the worker cannot fetch; its pages come in through `staff upload` |
+| `grimoire staff source <product\|id> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo> [--tag-pattern <regex>])` | Correct how a source reads its version. Drops the chunks under the old label and reindexes from the stored crawl. |
+| `grimoire staff create <url> --product <name> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]...` | Register a source the worker cannot fetch; its pages come in through `staff upload` |
 | `grimoire staff upload <product\|id> <page-url> <file.html>` | Store one fetched page for an upload source; `staff recrawl` then processes what was uploaded |
 | `grimoire staff recrawl <product\|id>` | Fetch the site again |
 | `grimoire staff reindex <product\|id>` | Index the stored crawl again, no fetching |

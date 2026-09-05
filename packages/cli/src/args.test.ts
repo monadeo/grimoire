@@ -3,12 +3,12 @@ import { intFlag, parseArgs, requireFlagOneOf, requirePositional, UsageError } f
 
 describe("parseArgs value-taking flags", () => {
   it("errors when a value-taking flag is the last token", () => {
-    expect(() => parseArgs(["--lang"])).toThrow(UsageError);
-    expect(() => parseArgs(["--lang"])).toThrow("--lang requires a value");
+    expect(() => parseArgs(["--reranker"])).toThrow(UsageError);
+    expect(() => parseArgs(["--reranker"])).toThrow("--reranker requires a value");
   });
 
   it("errors when a value-taking flag is followed by another flag", () => {
-    expect(() => parseArgs(["--top-k", "--json"])).toThrow(UsageError);
+    expect(() => parseArgs(["--reranker", "--json"])).toThrow(UsageError);
     expect(() => parseArgs(["-s", "-q"], { "-s": "source" })).toThrow("-s requires a value");
   });
 
@@ -17,8 +17,8 @@ describe("parseArgs value-taking flags", () => {
   });
 
   it("still accepts a normal value after the flag", () => {
-    const a = parseArgs(["--lang", "en"]);
-    expect(a.flags.lang).toEqual(["en"]);
+    const a = parseArgs(["--reranker", "local"]);
+    expect(a.flags.reranker).toEqual(["local"]);
   });
 });
 
@@ -43,11 +43,11 @@ describe("parseArgs bool flags", () => {
 });
 
 describe("parseArgs unknown-flag rejection", () => {
-  const SEARCH_FLAGS = ["source", "lang", "top-k", "json", "compact"];
+  const SEARCH_FLAGS = ["source", "reranker", "json", "compact"];
 
   it("rejects a value-taking flag outside the allowed set instead of swallowing its value", () => {
-    expect(() => parseArgs(["--top", "4"], {}, SEARCH_FLAGS)).toThrow(UsageError);
-    expect(() => parseArgs(["--top", "4"], {}, SEARCH_FLAGS)).toThrow("Unknown flag --top");
+    expect(() => parseArgs(["--rerank", "local"], {}, SEARCH_FLAGS)).toThrow(UsageError);
+    expect(() => parseArgs(["--rerank", "local"], {}, SEARCH_FLAGS)).toThrow("Unknown flag --rerank");
   });
 
   it("rejects a bool flag outside the allowed set", () => {
@@ -55,9 +55,9 @@ describe("parseArgs unknown-flag rejection", () => {
   });
 
   it("accepts allowed flags, including via alias", () => {
-    const a = parseArgs(["-s", "nextjs@16", "--top-k", "3", "--compact"], { "-s": "source" }, SEARCH_FLAGS);
+    const a = parseArgs(["-s", "nextjs@16", "--reranker", "local", "--compact"], { "-s": "source" }, SEARCH_FLAGS);
     expect(a.flags.source).toEqual(["nextjs@16"]);
-    expect(a.flags["top-k"]).toEqual(["3"]);
+    expect(a.flags.reranker).toEqual(["local"]);
     expect(a.bools.has("compact")).toBe(true);
   });
 
@@ -81,17 +81,17 @@ describe("requirePositional", () => {
 
 describe("intFlag", () => {
   it("returns undefined when the flag is absent", () => {
-    expect(intFlag(parseArgs([]), "top-k")).toBeUndefined();
+    expect(intFlag(parseArgs([]), "window")).toBeUndefined();
   });
 
   it("parses a valid integer", () => {
-    expect(intFlag(parseArgs(["--top-k", "8"]), "top-k")).toBe(8);
+    expect(intFlag(parseArgs(["--window", "8"]), "window")).toBe(8);
   });
 
   it("rejects non-numeric and non-integer values", () => {
-    expect(() => intFlag(parseArgs(["--top-k", "eight"]), "top-k")).toThrow(UsageError);
-    expect(() => intFlag(parseArgs(["--top-k", "eight"]), "top-k")).toThrow("--top-k must be an integer");
-    expect(() => intFlag(parseArgs(["--top-k", "2.5"]), "top-k")).toThrow(UsageError);
+    expect(() => intFlag(parseArgs(["--window", "eight"]), "window")).toThrow(UsageError);
+    expect(() => intFlag(parseArgs(["--window", "eight"]), "window")).toThrow("--window must be an integer");
+    expect(() => intFlag(parseArgs(["--window", "2.5"]), "window")).toThrow(UsageError);
   });
 
   it("enforces the range when one is given", () => {

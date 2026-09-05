@@ -12,11 +12,11 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire setup <claude-code|cursor|windsurf|codex>
   grimoire init
   grimoire search "<query>" [-s nextjs@15 -s react] [--reranker <name>] [--json|--compact] [--debug] [--verbose]
-  grimoire sources [--q <kw>] [--names|--json]
+  grimoire sources [-q <keyword>] [--names|--json]
   grimoire versions <product> [--json]
   grimoire config [<key>] [<value>] [--unset]
   grimoire update
-  grimoire doc <point_id> [--window 2] [--json]
+  grimoire doc <point_id> [--window 0-5] [--json]
   grimoire report <point_id> --verdict helpful|incorrect|outdated [--note "..."]
   grimoire ingest <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>])
                         [--include <pattern>]... [--exclude <pattern>]... [--watch]
@@ -28,12 +28,12 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire staff cancel <job_id>
   grimoire staff source <product|id> [--watch] [--json]
   grimoire staff source <product|id> [--include <pattern>]... [--exclude <pattern>]... [--status active|disabled] [--markdown on|off]
-  grimoire staff source <product|id> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo>)
+  grimoire staff source <product|id> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>])
   grimoire staff urls <product|id> [--state <crawl state>] [--limit 50] [--json]
   grimoire staff create <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]...
   grimoire staff upload <product|id> <page-url> <file.html>
   grimoire staff recrawl <product|id> | reindex <product|id> | purge <product|id> --yes
-  grimoire mcp [--http]
+  grimoire mcp [--http]        prints the command that starts the MCP server
   grimoire help | --help | -h
   grimoire version | --version | -v
 

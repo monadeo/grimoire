@@ -43,7 +43,7 @@ export const CONFIG_KEYS: Record<string, KeySpec> = {
   },
   reranker: {
     prop: "reranker",
-    describe: "reranker for every search, one of `grimoire whoami` (default local)",
+    describe: "reranker for every search, one of `grimoire whoami`; unset means the server default",
     parse: (raw) => {
       if (raw !== "local" && !raw.startsWith("openrouter/")) {
         throw new UsageError("reranker must be `local` or an `openrouter/...` name from `grimoire whoami`");

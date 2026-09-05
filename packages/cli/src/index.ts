@@ -269,7 +269,7 @@ async function main(argv: string[]): Promise<number> {
           query,
           sources: toSelectors(sources),
           debug: args.bools.has("debug"),
-          ...(reranker && reranker !== "local" ? { reranker } : {}),
+          ...(reranker ? { reranker } : {}),
         });
         if (args.bools.has("verbose")) printTimings(res);
         if (json) process.stdout.write(JSON.stringify(res, null, 2) + "\n");
@@ -350,7 +350,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--rolling|--fixed v|--npm p|--pypi p|--github o/r] | recrawl <s> | reindex <s> | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> | reindex <s> | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });

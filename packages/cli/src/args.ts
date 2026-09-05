@@ -33,8 +33,8 @@ export function parseArgs(
     const arg = argv[i];
     if (arg.startsWith("--") || arg.startsWith("-")) {
       const name = aliases[arg] ?? arg.replace(/^--?/, "");
-      // A misspelled flag silently swallowing its value (`--top 4` when the
-      // real flag is --top-k) must fail loudly, not act like it worked.
+      // A misspelled flag silently swallowing its value (`--sourc nextjs` when
+      // the real flag is --source) must fail loudly, not act like it worked.
       if (allowed && !allowed.includes(name)) {
         throw new UsageError(`Unknown flag ${arg} — run \`grimoire help\` for valid flags`);
       }
