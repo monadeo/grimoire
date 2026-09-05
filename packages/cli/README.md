@@ -27,6 +27,35 @@ sign-on URL, opens it in your browser, and keeps a refresh token in
 URL, for headless or remote machines. CI can set `GRIMOIRE_AUTH_TOKEN` with a machine
 token instead of logging in. `GRIMOIRE_API_URL` overrides the API origin.
 
+## Users and access
+
+Anyone signs in with `grimoire login`; access is granted in Supabase Studio →
+Authentication → Users → the user's **app metadata**. The `grimoire` object
+there is the whole authorization:
+
+```json
+{"grimoire": {"access": true, "staff": true, "quota_per_day": 2000,
+              "rerankers": ["openrouter/cohere/rerank-v3.5"]}}
+```
+
+A regular user:
+
+```json
+{"grimoire": {"access": true, "quota_per_day": 500}}
+```
+
+| field | meaning |
+|---|---|
+| `access` | `true` turns the account on; `false` or a missing object means no access |
+| `staff` | every `grimoire staff` command, and every reranker |
+| `quota_per_day` | searches per day; 2000 when omitted |
+| `rerankers` | OpenRouter rerankers the account may pick with `--reranker` or `config reranker`; omit to allow none |
+
+The server reranks every search with its default reranker, whatever the
+account lists; `rerankers` only widens what a user may choose. Changes apply at
+the user's next token refresh, within an hour. A new user sees their subject in
+`grimoire login`'s output; that is the id to look up in Studio.
+
 ## Retrieval
 
 | Command | What it does |
