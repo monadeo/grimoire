@@ -143,6 +143,8 @@ function describeSource(detail: SourceDetailOut): string {
 
 // One word for where a source stands, with the count that moves in that stage.
 function describeStage(s: SourceOut): string {
+  // A server older than 0.23.1 sends no stage; say what the versions say.
+  if (!s.stage) return s.versions.length > 0 ? "indexed" : "pending";
   switch (s.stage) {
     case "crawling":
       return `crawling ${s.pages_done}/${s.pages_total}`;
@@ -277,7 +279,7 @@ async function main(argv: string[]): Promise<number> {
               versions: s.versions.length > 0 ? s.versions.join(", ") : "-",
               stage: describeStage(s),
               url: s.base_url,
-              pending: s.stage !== "indexed",
+              pending: s.stage ? s.stage !== "indexed" : s.versions.length === 0,
             }))
             .sort((a, b) => Number(b.pending) - Number(a.pending) || a.product.localeCompare(b.product));
           const w1 = Math.max(...rows.map((r) => r.product.length));
