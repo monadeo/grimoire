@@ -251,10 +251,14 @@ async function main(argv: string[]): Promise<number> {
         } else if (args.bools.has("names")) {
           for (const s of sources) process.stdout.write(`${s.product}\n`);
         } else {
-          for (const s of sources) {
-            const versions = s.versions.length > 0 ? s.versions.join(", ") : "(not indexed yet)";
-            process.stdout.write(`${s.product}  ${versions}  ${s.base_url}\n`);
-          }
+          // Sources still being ingested first, then the rest by name; columns
+          // padded so the eye can run down each one.
+          const rows = sources
+            .map((s) => ({ product: s.product, versions: s.versions.length > 0 ? s.versions.join(", ") : "(not indexed yet)", url: s.base_url, pending: s.versions.length === 0 }))
+            .sort((a, b) => Number(b.pending) - Number(a.pending) || a.product.localeCompare(b.product));
+          const w1 = Math.max(...rows.map((r) => r.product.length));
+          const w2 = Math.max(...rows.map((r) => r.versions.length));
+          for (const r of rows) process.stdout.write(`${r.product.padEnd(w1)}  ${r.versions.padEnd(w2)}  ${r.url}\n`);
         }
         return EXIT.ok;
       }
