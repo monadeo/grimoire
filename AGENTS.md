@@ -15,6 +15,12 @@ generates from.
 
 ## Rules
 
+**This repository is public.** Its README, code and this file are read by
+strangers. Product usage belongs here; how Grimoire is operated does not:
+no administration steps, no infrastructure names, no internal procedures.
+Those live in the private server repository.
+
+
 **No workarounds.** A fix goes where the problem is. No `any`, no
 `eslint-disable`, no rule overrides, no casts to silence the compiler. If the
 clean fix is out of reach, say so and stop.
