@@ -123,6 +123,18 @@ async function resolveSourceId(client: GrimoireClient, ref: string): Promise<str
   return match.id;
 }
 
+function describeRoute(detail: SourceDetailOut): string {
+  // Servers before 0.23.4 send only the markdown flag.
+  const route = detail.route ?? (detail.page_markdown ? "markdown" : "browser");
+  const words: Record<string, string> = {
+    browser: "browser crawl",
+    markdown: "published page markdown",
+    upload: "uploaded pages",
+    zendesk: "Zendesk help center API",
+  };
+  return words[route] ?? route;
+}
+
 function describeSource(detail: SourceDetailOut): string {
   const frontier = Object.entries(detail.frontier)
     .map(([status, count]) => `${status}=${count}`)
@@ -130,7 +142,7 @@ function describeSource(detail: SourceDetailOut): string {
   const lines = [
     `${detail.product}  ${detail.status}  ${detail.base_url}`,
     `id: ${detail.id}`,
-    `route: ${detail.page_markdown ? "published page markdown" : "browser crawl"}`,
+    `route: ${describeRoute(detail)}`,
     `versions: ${detail.versions.length > 0 ? detail.versions.join(", ") : "(not indexed yet)"}`,
     `include: ${detail.include_patterns.join(" ") || "(all)"}  exclude: ${detail.exclude_patterns.join(" ") || "(none)"}`,
     `frontier: ${frontier || "(empty)"}`,

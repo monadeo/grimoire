@@ -808,6 +808,11 @@ export interface components {
             page_markdown: boolean;
             /** Product */
             product: string;
+            /**
+             * Route
+             * @enum {string}
+             */
+            route: "browser" | "markdown" | "upload" | "zendesk";
             /** Status */
             status: string;
             /** Versions */

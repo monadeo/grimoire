@@ -664,6 +664,14 @@ components:
         product:
           title: Product
           type: string
+        route:
+          enum:
+          - browser
+          - markdown
+          - upload
+          - zendesk
+          title: Route
+          type: string
         status:
           title: Status
           type: string
@@ -678,6 +686,7 @@ components:
       - base_url
       - status
       - page_markdown
+      - route
       - include_patterns
       - exclude_patterns
       - versions
