@@ -25,6 +25,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire staff users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject>
   grimoire staff token <name> --quota <per-day>
   grimoire staff jobs [--source <product|id>] [--state <state>] [--kind <kind>] [--limit 50] [--json]
+  grimoire staff workers [--json]
   grimoire staff cancel <job_id>
   grimoire staff source <product|id> [--watch] [--json]
   grimoire staff source <product|id> [--include <pattern>]... [--exclude <pattern>]... [--status active|disabled] [--markdown on|off]

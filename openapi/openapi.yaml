@@ -1048,6 +1048,47 @@ components:
       - versions
       title: VersionsOut
       type: object
+    WorkerOut:
+      properties:
+        id:
+          title: Id
+          type: string
+        job_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Job Id
+        last_progress_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Last Progress At
+        last_seen:
+          format: date-time
+          title: Last Seen
+          type: string
+        silent:
+          title: Silent
+          type: boolean
+        started_at:
+          format: date-time
+          title: Started At
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - id
+      - version
+      - started_at
+      - last_seen
+      - last_progress_at
+      - job_id
+      - silent
+      title: WorkerOut
+      type: object
   securitySchemes:
     HTTPBearer:
       scheme: bearer
@@ -1823,3 +1864,25 @@ paths:
       security:
       - HTTPBearer: []
       summary: Revoke User
+  /v1/staff/workers:
+    get:
+      description: 'Every worker process seen in the last day, with the job it holds.
+        A
+
+        silent one stopped reporting; the job it held frees up when its lease
+
+        runs out.'
+      operationId: list_workers_v1_staff_workers_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/WorkerOut'
+                title: Response List Workers V1 Staff Workers Get
+                type: array
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: List Workers

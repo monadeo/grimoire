@@ -17,6 +17,7 @@ export type ReportOut = Schemas["ReportOut"];
 export type SubmissionIn = Schemas["SubmissionIn"];
 export type SubmitAccepted = Schemas["SubmitAccepted"];
 export type JobOut = Schemas["JobOut"];
+export type WorkerOut = Schemas["WorkerOut"];
 export type MeOut = Schemas["MeOut"];
 export type UserGrantOut = Schemas["UserGrantOut"];
 export type TokenMinted = Schemas["TokenMinted"];
@@ -252,6 +253,10 @@ export class GrimoireClient {
 
   purgeSource(sourceId: string): Promise<PurgeOut> {
     return this.request<PurgeOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}`, { method: "DELETE" });
+  }
+
+  listWorkers(): Promise<WorkerOut[]> {
+    return this.request<WorkerOut[]>("/v1/staff/workers");
   }
 
   listJobs(filter: { sourceId?: string; state?: string; kind?: string; limit?: number }): Promise<JobOut[]> {

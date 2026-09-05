@@ -41,6 +41,7 @@ export {
   type SubmissionIn,
   type SubmitAccepted,
   type JobOut,
+  type WorkerOut,
   type MeOut,
   type UserGrantOut,
   type TokenMinted,
