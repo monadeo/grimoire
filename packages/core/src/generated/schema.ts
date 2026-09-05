@@ -264,6 +264,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/staff/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Upload Source
+         * @description Register a source whose pages will be uploaded, skipping the submit
+         *     chain that would try to fetch the site.
+         */
+        post: operations["create_upload_source_v1_staff_sources_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/staff/sources/{source_id}": {
         parameters: {
             query?: never;
@@ -305,6 +326,27 @@ export interface paths {
          */
         get: operations["list_frontier_v1_staff_sources__source_id__frontier_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/staff/sources/{source_id}/pages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Upload Page
+         * @description Store one fetched page for an upload source. The next crawl run cleans
+         *     and stores it like a live fetch; nothing is fetched from the site.
+         */
+        put: operations["upload_page_v1_staff_sources__source_id__pages_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -536,6 +578,22 @@ export interface components {
             /** Subject */
             subject: string;
         };
+        /** PageUploadIn */
+        PageUploadIn: {
+            /** Html */
+            html: string;
+            /** Url */
+            url: string;
+        };
+        /** PageUploadOut */
+        PageUploadOut: {
+            /** Bytes */
+            bytes: number;
+            /** Queued */
+            queued: boolean;
+            /** Url */
+            url: string;
+        };
         /** ProbeConfig */
         ProbeConfig: {
             /**
@@ -695,6 +753,31 @@ export interface components {
             stitch_ms: number;
             /** Total Ms */
             total_ms: number;
+        };
+        /**
+         * SourceCreateIn
+         * @description A source the worker cannot fetch itself. Pages arrive through
+         *     PUT /v1/staff/sources/{id}/pages, fetched elsewhere.
+         */
+        SourceCreateIn: {
+            /**
+             * Exclude Patterns
+             * @default []
+             */
+            exclude_patterns: string[];
+            /**
+             * Include Patterns
+             * @default []
+             */
+            include_patterns: string[];
+            probe?: components["schemas"]["ProbeConfig"] | null;
+            /** Product */
+            product: string;
+            /** Url */
+            url: string;
+            version_rule: components["schemas"]["VersionRule"];
+            /** Version Scheme */
+            version_scheme?: ("semver" | "date" | "rolling") | null;
         };
         /** SourceDetailOut */
         SourceDetailOut: {
@@ -1360,6 +1443,39 @@ export interface operations {
             };
         };
     };
+    create_upload_source_v1_staff_sources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourceCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     source_detail_v1_staff_sources__source_id__get: {
         parameters: {
             query?: never;
@@ -1478,6 +1594,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FrontierUrlOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_page_v1_staff_sources__source_id__pages_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PageUploadIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageUploadOut"];
                 };
             };
             /** @description Validation Error */

@@ -72,6 +72,8 @@ These need a staff account.
 | `grimoire staff urls <product\|id> [--state <crawl state>] [--limit 50] [--json]` | Every URL of a source with its crawl state, failures first and why |
 | `grimoire staff source <product\|id> [--include <pattern>]... [--exclude <pattern>]... [--status active\|disabled] [--markdown on\|off]` | Change what a source covers and how it is fetched |
 | `grimoire staff source <product\|id> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo>)` | Correct how a source reads its version. Drops the chunks under the old label and reindexes from the stored crawl. |
+| `grimoire staff create <url> --product <name> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo>) [--include <pattern>]... [--exclude <pattern>]...` | Register a source the worker cannot fetch; its pages come in through `staff upload` |
+| `grimoire staff upload <product\|id> <page-url> <file.html>` | Store one fetched page for an upload source; `staff recrawl` then processes what was uploaded |
 | `grimoire staff recrawl <product\|id>` | Fetch the site again |
 | `grimoire staff reindex <product\|id>` | Index the stored crawl again, no fetching |
 | `grimoire staff purge <product\|id> --yes` | Delete a source and everything indexed from it |

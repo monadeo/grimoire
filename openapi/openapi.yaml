@@ -235,6 +235,37 @@ components:
       - rerankers
       title: MeOut
       type: object
+    PageUploadIn:
+      properties:
+        html:
+          minLength: 1
+          title: Html
+          type: string
+        url:
+          title: Url
+          type: string
+      required:
+      - url
+      - html
+      title: PageUploadIn
+      type: object
+    PageUploadOut:
+      properties:
+        bytes:
+          title: Bytes
+          type: integer
+        queued:
+          title: Queued
+          type: boolean
+        url:
+          title: Url
+          type: string
+      required:
+      - url
+      - bytes
+      - queued
+      title: PageUploadOut
+      type: object
     ProbeConfig:
       properties:
         kind:
@@ -522,7 +553,8 @@ components:
       title: SearchResult
       type: object
     SearchTimings:
-      description: Milliseconds per stage of one search, so a slow answer names its cause.
+      description: Milliseconds per stage of one search, so a slow answer names its
+        cause.
       properties:
         embed_ms:
           title: Embed Ms
@@ -546,6 +578,50 @@ components:
       - stitch_ms
       - total_ms
       title: SearchTimings
+      type: object
+    SourceCreateIn:
+      description: 'A source the worker cannot fetch itself. Pages arrive through
+
+        PUT /v1/staff/sources/{id}/pages, fetched elsewhere.'
+      properties:
+        exclude_patterns:
+          default: []
+          items:
+            type: string
+          title: Exclude Patterns
+          type: array
+        include_patterns:
+          default: []
+          items:
+            type: string
+          title: Include Patterns
+          type: array
+        probe:
+          anyOf:
+          - $ref: '#/components/schemas/ProbeConfig'
+          - type: 'null'
+        product:
+          title: Product
+          type: string
+        url:
+          title: Url
+          type: string
+        version_rule:
+          $ref: '#/components/schemas/VersionRule'
+        version_scheme:
+          anyOf:
+          - enum:
+            - semver
+            - date
+            - rolling
+            type: string
+          - type: 'null'
+          title: Version Scheme
+      required:
+      - url
+      - product
+      - version_rule
+      title: SourceCreateIn
       type: object
     SourceDetailOut:
       properties:
@@ -1337,6 +1413,34 @@ paths:
       security:
       - HTTPBearer: []
       summary: Review Queue
+  /v1/staff/sources:
+    post:
+      description: 'Register a source whose pages will be uploaded, skipping the submit
+
+        chain that would try to fetch the site.'
+      operationId: create_upload_source_v1_staff_sources_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceCreateIn'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceDetailOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Create Upload Source
   /v1/staff/sources/{source_id}:
     delete:
       description: 'Remove a source and everything indexed from it. Stored crawl artifacts
@@ -1480,6 +1584,43 @@ paths:
       security:
       - HTTPBearer: []
       summary: List Frontier
+  /v1/staff/sources/{source_id}/pages:
+    put:
+      description: 'Store one fetched page for an upload source. The next crawl run
+        cleans
+
+        and stores it like a live fetch; nothing is fetched from the site.'
+      operationId: upload_page_v1_staff_sources__source_id__pages_put
+      parameters:
+      - in: path
+        name: source_id
+        required: true
+        schema:
+          format: uuid
+          title: Source Id
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PageUploadIn'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageUploadOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Upload Page
   /v1/staff/sources/{source_id}/recrawl:
     post:
       description: 'Restart the crawl from the base URL; an open crawl or index of

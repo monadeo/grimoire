@@ -24,6 +24,8 @@ export type SourceDetailOut = Schemas["SourceDetailOut"];
 export type SourceScopeIn = Schemas["SourceScopeIn"];
 export type PurgeOut = Schemas["PurgeOut"];
 export type FrontierUrlOut = Schemas["FrontierUrlOut"];
+export type SourceCreateIn = Schemas["SourceCreateIn"];
+export type PageUploadOut = Schemas["PageUploadOut"];
 
 export { ApiError } from "./errors.js";
 
@@ -220,6 +222,17 @@ export class GrimoireClient {
     return this.request<FrontierUrlOut[]>(
       `/v1/staff/sources/${encodeURIComponent(sourceId)}/frontier${query ? `?${query}` : ""}`,
     );
+  }
+
+  createUploadSource(body: SourceCreateIn): Promise<SourceDetailOut> {
+    return this.request<SourceDetailOut>("/v1/staff/sources", { method: "POST", body: JSON.stringify(body) });
+  }
+
+  uploadPage(sourceId: string, url: string, html: string): Promise<PageUploadOut> {
+    return this.request<PageUploadOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/pages`, {
+      method: "PUT",
+      body: JSON.stringify({ url, html }),
+    });
   }
 
   reindexSource(sourceId: string): Promise<JobOut> {

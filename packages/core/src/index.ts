@@ -48,4 +48,6 @@ export {
   type SourceScopeIn,
   type PurgeOut,
   type FrontierUrlOut,
+  type SourceCreateIn,
+  type PageUploadOut,
 } from "./client.js";
