@@ -10,6 +10,7 @@ export class UsageError extends Error {}
 const BOOL_FLAGS = new Set([
   "json",
   "yes",
+  "verbose",
   "compact",
   "watch",
   "names",

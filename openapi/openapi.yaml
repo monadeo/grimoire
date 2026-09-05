@@ -435,6 +435,8 @@ components:
         retrievals_remaining:
           title: Retrievals Remaining
           type: integer
+        timings:
+          $ref: '#/components/schemas/SearchTimings'
         untrusted_content_notice:
           title: Untrusted Content Notice
           type: string
@@ -445,6 +447,7 @@ components:
       - untrusted_content_notice
       - config_version
       - latency_ms
+      - timings
       - retrievals_remaining
       title: SearchResponse
       type: object
@@ -502,6 +505,32 @@ components:
       - ordinal
       - text
       title: SearchResult
+      type: object
+    SearchTimings:
+      description: Milliseconds per stage of one search, so a slow answer names its cause.
+      properties:
+        embed_ms:
+          title: Embed Ms
+          type: integer
+        rerank_ms:
+          title: Rerank Ms
+          type: integer
+        retrieve_ms:
+          title: Retrieve Ms
+          type: integer
+        stitch_ms:
+          title: Stitch Ms
+          type: integer
+        total_ms:
+          title: Total Ms
+          type: integer
+      required:
+      - embed_ms
+      - retrieve_ms
+      - rerank_ms
+      - stitch_ms
+      - total_ms
+      title: SearchTimings
       type: object
     SourceDetailOut:
       properties:

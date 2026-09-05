@@ -19,7 +19,7 @@ import {
 } from "@monadeo.com/grimoire-core";
 import { parseArgs, requirePositional, requireFlagOneOf, intFlag, UsageError, type ParsedArgs } from "./args.js";
 import { COMMAND_FLAGS, HELP, VERSION } from "./help.js";
-import { printResults, printCompact, EXIT } from "./output.js";
+import { printResults, printCompact, printTimings, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
 import { runConfig } from "./commands/config.js";
@@ -227,6 +227,7 @@ async function main(argv: string[]): Promise<number> {
           return EXIT.apiError;
         }
         const res = await client.search({ query, sources: toSelectors(sources), debug: args.bools.has("debug") });
+        if (args.bools.has("verbose")) printTimings(res);
         if (json) process.stdout.write(JSON.stringify(res, null, 2) + "\n");
         else if (args.bools.has("compact")) printCompact(res);
         else printResults(res);

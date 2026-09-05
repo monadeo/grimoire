@@ -645,6 +645,7 @@ export interface components {
             results: components["schemas"]["SearchResult"][];
             /** Retrievals Remaining */
             retrievals_remaining: number;
+            timings: components["schemas"]["SearchTimings"];
             /** Untrusted Content Notice */
             untrusted_content_notice: string;
         };
@@ -672,6 +673,22 @@ export interface components {
             title: string | null;
             /** Version */
             version: string;
+        };
+        /**
+         * SearchTimings
+         * @description Milliseconds per stage of one search, so a slow answer names its cause.
+         */
+        SearchTimings: {
+            /** Embed Ms */
+            embed_ms: number;
+            /** Rerank Ms */
+            rerank_ms: number;
+            /** Retrieve Ms */
+            retrieve_ms: number;
+            /** Stitch Ms */
+            stitch_ms: number;
+            /** Total Ms */
+            total_ms: number;
         };
         /** SourceDetailOut */
         SourceDetailOut: {

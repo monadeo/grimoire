@@ -5,6 +5,18 @@ export const EXIT = { ok: 0, apiError: 1, authRequired: 2, quota: 3, notFound: 4
 
 // The API labels result text as untrusted data; the CLI repeats that on stderr
 // so agents reading stdout never see it as an instruction.
+/** Where the time went, on stderr, so stdout stays the answer. */
+export function printTimings(res: SearchResponse): void {
+  const t = res.timings;
+  if (!t) {
+    process.stderr.write(`timings: total ${res.latency_ms} ms (server older than 0.21.0 reports no stages)\n`);
+    return;
+  }
+  process.stderr.write(
+    `timings: embed ${t.embed_ms} ms · retrieve ${t.retrieve_ms} ms · rerank ${t.rerank_ms} ms · stitch ${t.stitch_ms} ms · total ${t.total_ms} ms\n`,
+  );
+}
+
 function preamble(res: SearchResponse): void {
   const versions = Object.entries(res.resolved_versions)
     .map(([product, version]) => `${product}@${version}`)

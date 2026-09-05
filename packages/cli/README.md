@@ -31,7 +31,7 @@ token instead of logging in. `GRIMOIRE_API_URL` overrides the API origin.
 
 | Command | What it does |
 |---|---|
-| `grimoire search "<query>" [-s nextjs@15 -s react] [--json\|--compact] [--debug]` | Search one or more sources |
+| `grimoire search "<query>" [-s nextjs@15 -s react] [--json\|--compact] [--debug] [--verbose]` | Search one or more sources. `--verbose` prints on stderr how long each stage took: embed, retrieve, rerank, stitch. |
 | `grimoire sources [--q <keyword>] [--names\|--json]` | List indexed sources |
 | `grimoire versions <product> [--json]` | Versions indexed for a product |
 | `grimoire doc <point_id> [--window 2] [--json]` | A chunk with its neighbours |
