@@ -158,8 +158,12 @@ function describeStage(s: SourceOut): string {
   // A server older than 0.23.1 sends no stage; say what the versions say.
   if (!s.stage) return s.versions.length > 0 ? "indexed" : "pending";
   switch (s.stage) {
+    case "waiting_crawl":
+      return "waiting to crawl";
     case "crawling":
       return `crawling ${s.pages_done}/${s.pages_total}`;
+    case "waiting_index":
+      return "waiting to index";
     case "indexing":
       return `indexing ${s.pages_indexed}/${s.pages_done}`;
     case "indexed":

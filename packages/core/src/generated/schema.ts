@@ -841,7 +841,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "queued" | "crawling" | "indexing" | "indexed" | "failed" | "cancelled" | "empty";
+            stage: "waiting_crawl" | "crawling" | "waiting_index" | "indexing" | "indexed" | "failed" | "cancelled" | "empty";
             /** Status */
             status: string;
             /** Versions */

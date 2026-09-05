@@ -724,8 +724,9 @@ components:
           type: string
         stage:
           enum:
-          - queued
+          - waiting_crawl
           - crawling
+          - waiting_index
           - indexing
           - indexed
           - failed
