@@ -41,6 +41,16 @@ export const CONFIG_KEYS: Record<string, KeySpec> = {
     describe: "hours between CLI update checks (default 24, 0 disables)",
     parse: (raw) => intInRange("update-check-hours", raw, 0),
   },
+  reranker: {
+    prop: "reranker",
+    describe: "reranker for every search, one of `grimoire whoami` (default local)",
+    parse: (raw) => {
+      if (raw !== "local" && !raw.startsWith("openrouter/")) {
+        throw new UsageError("reranker must be `local` or an `openrouter/...` name from `grimoire whoami`");
+      }
+      return raw;
+    },
+  },
 };
 
 // auth-token is a secret and lives in a 0600 file, not the world-readable

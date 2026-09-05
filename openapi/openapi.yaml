@@ -219,6 +219,11 @@ components:
         quota_per_day:
           title: Quota Per Day
           type: integer
+        rerankers:
+          items:
+            type: string
+          title: Rerankers
+          type: array
         subject:
           title: Subject
           type: string
@@ -227,6 +232,7 @@ components:
       - subject
       - is_staff
       - quota_per_day
+      - rerankers
       title: MeOut
       type: object
     ProbeConfig:
@@ -395,6 +401,11 @@ components:
           minLength: 1
           title: Query
           type: string
+        reranker:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reranker
         sources:
           items:
             $ref: '#/components/schemas/SourceSelector'
@@ -422,6 +433,9 @@ components:
         latency_ms:
           title: Latency Ms
           type: integer
+        reranker:
+          title: Reranker
+          type: string
         resolved_versions:
           additionalProperties:
             type: string
@@ -447,6 +461,7 @@ components:
       - untrusted_content_notice
       - config_version
       - latency_ms
+      - reranker
       - timings
       - retrievals_remaining
       title: SearchResponse

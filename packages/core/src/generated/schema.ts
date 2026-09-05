@@ -531,6 +531,8 @@ export interface components {
             kind: string;
             /** Quota Per Day */
             quota_per_day: number;
+            /** Rerankers */
+            rerankers: string[];
             /** Subject */
             subject: string;
         };
@@ -626,6 +628,8 @@ export interface components {
             debug: boolean;
             /** Query */
             query: string;
+            /** Reranker */
+            reranker?: string | null;
             /** Sources */
             sources: components["schemas"]["SourceSelector"][];
         };
@@ -637,6 +641,8 @@ export interface components {
             config_version: string;
             /** Latency Ms */
             latency_ms: number;
+            /** Reranker */
+            reranker: string;
             /** Resolved Versions */
             resolved_versions: {
                 [key: string]: string;

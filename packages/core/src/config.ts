@@ -11,6 +11,8 @@ export interface GlobalConfig {
   apiBaseUrl: string;
   defaultSources?: SourcePin[];
   updateCheckHours?: number;
+  /** Reranker sent with every search; unset means the server's local default. */
+  reranker?: string;
 }
 
 export interface ProjectConfig {

@@ -31,7 +31,7 @@ token instead of logging in. `GRIMOIRE_API_URL` overrides the API origin.
 
 | Command | What it does |
 |---|---|
-| `grimoire search "<query>" [-s nextjs@15 -s react] [--json\|--compact] [--debug] [--verbose]` | Search one or more sources. `--verbose` prints on stderr how long each stage took: embed, retrieve, rerank, stitch. |
+| `grimoire search "<query>" [-s nextjs@15 -s react] [--reranker <name>] [--json\|--compact] [--debug] [--verbose]` | Search one or more sources. `--reranker` picks one of the rerankers `grimoire whoami` lists for your account; `--verbose` prints on stderr how long each stage took and which reranker ran. |
 | `grimoire sources [--q <keyword>] [--names\|--json]` | List indexed sources |
 | `grimoire versions <product> [--json]` | Versions indexed for a product |
 | `grimoire doc <point_id> [--window 2] [--json]` | A chunk with its neighbours |
@@ -43,7 +43,7 @@ token instead of logging in. `GRIMOIRE_API_URL` overrides the API origin.
 |---|---|
 | `grimoire setup <claude-code\|cursor\|windsurf\|codex>` | Wire the MCP server into an agent |
 | `grimoire init` | Write a project `.grimoire.json` with default sources |
-| `grimoire config [<key>] [<value>] [--unset]` | Read or change client config |
+| `grimoire config [<key>] [<value>] [--unset]` | Read or change client config: `api-url`, `update-check-hours`, `reranker`, `auth-token` |
 | `grimoire mcp [--http]` | Run the MCP server on stdio, or over HTTP |
 | `grimoire update` | Update the client in place |
 

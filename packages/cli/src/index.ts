@@ -77,7 +77,9 @@ async function describeIdentity(client: GrimoireClient): Promise<string> {
   try {
     const me = await client.me();
     const level = me.is_staff ? "staff" : "user";
-    return `${who}\nsubject ${me.subject} (${me.kind})\naccess ${level}, ${me.quota_per_day} searches/day`;
+    const rerankers = me.rerankers ?? [];
+    const extra = rerankers.length > 0 ? `\nrerankers: local, ${rerankers.join(", ")}` : "\nrerankers: local";
+    return `${who}\nsubject ${me.subject} (${me.kind})\naccess ${level}, ${me.quota_per_day} searches/day${extra}`;
   } catch (err) {
     if (err instanceof ApiError && err.status === 403) {
       // The subject is what staff needs to grant access, so it must be
@@ -226,7 +228,13 @@ async function main(argv: string[]): Promise<number> {
           );
           return EXIT.apiError;
         }
-        const res = await client.search({ query, sources: toSelectors(sources), debug: args.bools.has("debug") });
+        const reranker = args.flags.reranker?.[0] ?? loadGlobalConfig().reranker;
+        const res = await client.search({
+          query,
+          sources: toSelectors(sources),
+          debug: args.bools.has("debug"),
+          ...(reranker && reranker !== "local" ? { reranker } : {}),
+        });
         if (args.bools.has("verbose")) printTimings(res);
         if (json) process.stdout.write(JSON.stringify(res, null, 2) + "\n");
         else if (args.bools.has("compact")) printCompact(res);

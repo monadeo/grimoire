@@ -11,7 +11,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire login [--no-launch-browser] | logout | whoami
   grimoire setup <claude-code|cursor|windsurf|codex>
   grimoire init
-  grimoire search "<query>" [-s nextjs@15 -s react] [--json|--compact] [--debug] [--verbose]
+  grimoire search "<query>" [-s nextjs@15 -s react] [--reranker <name>] [--json|--compact] [--debug] [--verbose]
   grimoire sources [--q <kw>] [--names|--json]
   grimoire versions <product> [--json]
   grimoire config [<key>] [<value>] [--unset]
@@ -47,7 +47,7 @@ export const COMMAND_FLAGS: Record<string, readonly string[]> = {
   mcp: ["http"],
   config: ["unset"],
   update: [],
-  search: ["source", "json", "compact", "debug", "verbose"],
+  search: ["source", "json", "compact", "debug", "verbose", "reranker"],
   sources: ["q", "names", "json"],
   versions: ["json"],
   doc: ["window", "json"],

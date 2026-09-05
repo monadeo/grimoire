@@ -13,7 +13,7 @@ export function printTimings(res: SearchResponse): void {
     return;
   }
   process.stderr.write(
-    `timings: embed ${t.embed_ms} ms · retrieve ${t.retrieve_ms} ms · rerank ${t.rerank_ms} ms · stitch ${t.stitch_ms} ms · total ${t.total_ms} ms\n`,
+    `timings: embed ${t.embed_ms} ms · retrieve ${t.retrieve_ms} ms · rerank ${t.rerank_ms} ms (${res.reranker ?? "local"}) · stitch ${t.stitch_ms} ms · total ${t.total_ms} ms\n`,
   );
 }
 
