@@ -12,6 +12,7 @@ import {
   resolveDefaultSources,
   loadGlobalConfig,
   type JobOut,
+  type SourceOut,
   type SourceDetailOut,
   type SourceScopeIn,
   type SourcePin,
@@ -140,6 +141,20 @@ function describeSource(detail: SourceDetailOut): string {
   return lines.join("\n");
 }
 
+// One word for where a source stands, with the count that moves in that stage.
+function describeStage(s: SourceOut): string {
+  switch (s.stage) {
+    case "crawling":
+      return `crawling ${s.pages_done}/${s.pages_total}`;
+    case "indexing":
+      return `indexing ${s.pages_indexed}/${s.pages_done}`;
+    case "indexed":
+      return s.indexed_at ? `indexed ${s.indexed_at.slice(0, 10)}` : "indexed";
+    default:
+      return s.stage;
+  }
+}
+
 function describeJob(job: JobOut): string {
   // A job left behind by a restart still says "running"; say so plainly.
   const state = job.stalled ? `${job.state} (stalled, waiting to be picked up)` : job.state;
@@ -257,11 +272,18 @@ async function main(argv: string[]): Promise<number> {
           // Sources still being ingested first, then the rest by name; columns
           // padded so the eye can run down each one.
           const rows = sources
-            .map((s) => ({ product: s.product, versions: s.versions.length > 0 ? s.versions.join(", ") : "(not indexed yet)", url: s.base_url, pending: s.versions.length === 0 }))
+            .map((s) => ({
+              product: s.product,
+              versions: s.versions.length > 0 ? s.versions.join(", ") : "-",
+              stage: describeStage(s),
+              url: s.base_url,
+              pending: s.stage !== "indexed",
+            }))
             .sort((a, b) => Number(b.pending) - Number(a.pending) || a.product.localeCompare(b.product));
           const w1 = Math.max(...rows.map((r) => r.product.length));
           const w2 = Math.max(...rows.map((r) => r.versions.length));
-          for (const r of rows) process.stdout.write(`${r.product.padEnd(w1)}  ${r.versions.padEnd(w2)}  ${r.url}\n`);
+          const w3 = Math.max(...rows.map((r) => r.stage.length));
+          for (const r of rows) process.stdout.write(`${r.product.padEnd(w1)}  ${r.versions.padEnd(w2)}  ${r.stage.padEnd(w3)}  ${r.url}\n`);
         }
         return EXIT.ok;
       }
@@ -273,7 +295,7 @@ async function main(argv: string[]): Promise<number> {
           return EXIT.ok;
         }
         for (const v of res.versions) {
-          process.stdout.write(`${v.version}${v.version === res.latest ? "  latest" : ""}  ${v.chunk_count} chunks\n`);
+          process.stdout.write(`${v.version}${v.version === res.latest ? "  latest" : ""}  ${v.chunk_count} chunks  indexed ${v.indexed_at.slice(0, 10)}\n`);
         }
         return EXIT.ok;
       }

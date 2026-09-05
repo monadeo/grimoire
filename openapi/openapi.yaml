@@ -695,8 +695,34 @@ components:
           format: uuid
           title: Id
           type: string
+        indexed_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Indexed At
+        pages_done:
+          title: Pages Done
+          type: integer
+        pages_indexed:
+          title: Pages Indexed
+          type: integer
+        pages_total:
+          title: Pages Total
+          type: integer
         product:
           title: Product
+          type: string
+        stage:
+          enum:
+          - queued
+          - crawling
+          - indexing
+          - indexed
+          - failed
+          - cancelled
+          - empty
+          title: Stage
           type: string
         status:
           title: Status
@@ -712,6 +738,11 @@ components:
       - base_url
       - status
       - versions
+      - stage
+      - pages_done
+      - pages_total
+      - pages_indexed
+      - indexed_at
       title: SourceOut
       type: object
     SourceScopeIn:
@@ -940,12 +971,17 @@ components:
         chunk_count:
           title: Chunk Count
           type: integer
+        indexed_at:
+          format: date-time
+          title: Indexed At
+          type: string
         version:
           title: Version
           type: string
       required:
       - version
       - chunk_count
+      - indexed_at
       title: VersionOut
       type: object
     VersionRule:

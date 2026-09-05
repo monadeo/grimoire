@@ -32,8 +32,8 @@ token instead of logging in. `GRIMOIRE_API_URL` overrides the API origin.
 | Command | What it does |
 |---|---|
 | `grimoire search "<query>" [-s nextjs@15 -s react] [--reranker <name>] [--json\|--compact] [--debug] [--verbose]` | Search one or more sources. `--reranker` picks one of the rerankers `grimoire whoami` lists for your account; `--verbose` prints on stderr how long each stage took and which reranker ran. |
-| `grimoire sources [--q <keyword>] [--names\|--json]` | List indexed sources |
-| `grimoire versions <product> [--json]` | Versions indexed for a product |
+| `grimoire sources [--q <keyword>] [--names\|--json]` | List sources with version, stage (queued, crawling n/m, indexing n/m, indexed date, failed) and URL; sources still in progress come first |
+| `grimoire versions <product> [--json]` | Versions indexed for a product, with chunk count and the date each was indexed |
 | `grimoire doc <point_id> [--window 2] [--json]` | A chunk with its neighbours |
 | `grimoire report <point_id> --verdict helpful\|incorrect\|outdated [--note "..."]` | Tell us a result was wrong |
 

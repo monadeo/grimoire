@@ -822,8 +822,21 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Indexed At */
+            indexed_at: string | null;
+            /** Pages Done */
+            pages_done: number;
+            /** Pages Indexed */
+            pages_indexed: number;
+            /** Pages Total */
+            pages_total: number;
             /** Product */
             product: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "queued" | "crawling" | "indexing" | "indexed" | "failed" | "cancelled" | "empty";
             /** Status */
             status: string;
             /** Versions */
@@ -946,6 +959,11 @@ export interface components {
         VersionOut: {
             /** Chunk Count */
             chunk_count: number;
+            /**
+             * Indexed At
+             * Format: date-time
+             */
+            indexed_at: string;
             /** Version */
             version: string;
         };
