@@ -600,17 +600,28 @@ async function watchJob(client: GrimoireClient, jobId: string): Promise<number> 
   return EXIT.apiError;
 }
 
+// Writes to a pipe are asynchronous; process.exit() right after a large
+// --json print cut the output at 64 KB. Wait for the last chunk to flush.
+function flushed(stream: NodeJS.WriteStream): Promise<void> {
+  return new Promise((resolve) => stream.write("", () => resolve()));
+}
+
+async function exit(code: number): Promise<never> {
+  await Promise.all([flushed(process.stdout), flushed(process.stderr)]);
+  process.exit(code);
+}
+
 notifyIfOutdated(VERSION);
 main(process.argv.slice(2))
   .then(async (code) => {
     await refreshUpdateState(VERSION, loadGlobalConfig().updateCheckHours);
-    process.exit(code);
+    await exit(code);
   })
-  .catch((err) => {
+  .catch(async (err) => {
     if (err instanceof UsageError) {
       process.stderr.write(`${err.message}\n`);
-      process.exit(EXIT.apiError);
+      await exit(EXIT.apiError);
     }
     process.stderr.write(`fatal: ${(err as Error).message}\n`);
-    process.exit(EXIT.apiError);
+    await exit(EXIT.apiError);
   });
