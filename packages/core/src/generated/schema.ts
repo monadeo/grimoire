@@ -805,6 +805,8 @@ export interface components {
         SourceDetailOut: {
             /** Base Url */
             base_url: string;
+            /** Content Selector */
+            content_selector?: string | null;
             /**
              * Descoped Urls
              * @default 0
@@ -874,6 +876,8 @@ export interface components {
          * @description Staff edit of a source; a field left out stays as it is.
          */
         SourceScopeIn: {
+            /** Content Selector */
+            content_selector?: string | null;
             /** Exclude Patterns */
             exclude_patterns?: string[] | null;
             /** Include Patterns */

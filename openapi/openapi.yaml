@@ -628,6 +628,11 @@ components:
         base_url:
           title: Base Url
           type: string
+        content_selector:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Selector
         descoped_urls:
           default: 0
           title: Descoped Urls
@@ -758,6 +763,11 @@ components:
     SourceScopeIn:
       description: Staff edit of a source; a field left out stays as it is.
       properties:
+        content_selector:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content Selector
         exclude_patterns:
           anyOf:
           - items:

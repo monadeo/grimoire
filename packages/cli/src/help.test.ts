@@ -6,7 +6,7 @@ import { COMMAND_FLAGS, HELP } from "./help.js";
 
 const ALIASES: Record<string, string> = { source: "-s", q: "-q" };
 // Flags the help text spells out in prose rather than in a usage line.
-const UNLISTED = new Set(["reason", "name", "quota", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "yes"]);
+const UNLISTED = new Set(["reason", "name", "quota", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "selector", "yes"]);
 
 describe("help text", () => {
   const usageLines = HELP.split("\n").filter((line) => /^\s+grimoire /.test(line));
