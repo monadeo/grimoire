@@ -38,7 +38,7 @@ Ask your administrator, quoting the subject that `grimoire login` prints.
 | Command | What it does |
 |---|---|
 | `grimoire search "<query>" [-s nextjs@15 -s react] [--reranker <name>] [--json\|--compact] [--debug] [--verbose]` | Search one or more sources. `--reranker` picks one of the rerankers `grimoire whoami` lists for your account; `--verbose` prints on stderr how long each stage took and which reranker ran. |
-| `grimoire sources [-q <keyword>] [--names\|--json]` | List sources with version, stage and URL; sources still in progress come first. Stages: waiting to crawl, crawling n/m pages, waiting to index, indexing n/m pages, indexed with its date, failed, cancelled |
+| `grimoire sources [-q <keyword>] [--names\|--json]` | List sources with version, stage, size as `<pages>p <chunks>c`, how the pages came in (`crawl` by rules or `upload` by staff) and URL; sources still in progress come first. Stages: waiting to crawl, crawling n/m pages, waiting to index, indexing n/m pages, indexed with its date, failed, cancelled |
 | `grimoire versions <product> [--json]` | Versions indexed for a product, with chunk count and the date each was indexed |
 | `grimoire doc <point_id> [--window 0-5] [--json]` | A chunk with its neighbours; the window is how many chunks each side, 2 by default |
 | `grimoire report <point_id> --verdict helpful\|incorrect\|outdated [--note "..."]` | Tell us a result was wrong |

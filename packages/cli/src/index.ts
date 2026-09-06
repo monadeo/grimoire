@@ -307,6 +307,9 @@ async function main(argv: string[]): Promise<number> {
               product: s.product,
               versions: s.versions.length > 0 ? s.versions.join(", ") : "-",
               stage: describeStage(s),
+              size: s.chunks > 0 ? `${s.pages_indexed}p ${s.chunks}c` : "-",
+              // Pages came in by a crawl the rules drive, or by staff uploads.
+              via: s.route === "upload" ? "upload" : "crawl",
               url: s.base_url,
               pending: s.stage ? s.stage !== "indexed" : s.versions.length === 0,
             }))
@@ -314,7 +317,11 @@ async function main(argv: string[]): Promise<number> {
           const w1 = Math.max(...rows.map((r) => r.product.length));
           const w2 = Math.max(...rows.map((r) => r.versions.length));
           const w3 = Math.max(...rows.map((r) => r.stage.length));
-          for (const r of rows) process.stdout.write(`${r.product.padEnd(w1)}  ${r.versions.padEnd(w2)}  ${r.stage.padEnd(w3)}  ${r.url}\n`);
+          const w4 = Math.max(...rows.map((r) => r.size.length));
+          for (const r of rows)
+            process.stdout.write(
+              `${r.product.padEnd(w1)}  ${r.versions.padEnd(w2)}  ${r.stage.padEnd(w3)}  ${r.size.padEnd(w4)}  ${r.via.padEnd(6)}  ${r.url}\n`,
+            );
         }
         return EXIT.ok;
       }

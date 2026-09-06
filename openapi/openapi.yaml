@@ -705,6 +705,9 @@ components:
         base_url:
           title: Base Url
           type: string
+        chunks:
+          title: Chunks
+          type: integer
         id:
           format: uuid
           title: Id
@@ -726,6 +729,14 @@ components:
           type: integer
         product:
           title: Product
+          type: string
+        route:
+          enum:
+          - browser
+          - markdown
+          - upload
+          - zendesk
+          title: Route
           type: string
         stage:
           enum:
@@ -757,6 +768,8 @@ components:
       - pages_done
       - pages_total
       - pages_indexed
+      - chunks
+      - route
       - indexed_at
       title: SourceOut
       type: object

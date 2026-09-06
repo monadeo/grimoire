@@ -846,6 +846,8 @@ export interface components {
         SourceOut: {
             /** Base Url */
             base_url: string;
+            /** Chunks */
+            chunks: number;
             /**
              * Id
              * Format: uuid
@@ -861,6 +863,11 @@ export interface components {
             pages_total: number;
             /** Product */
             product: string;
+            /**
+             * Route
+             * @enum {string}
+             */
+            route: "browser" | "markdown" | "upload" | "zendesk";
             /**
              * Stage
              * @enum {string}
