@@ -1,6 +1,6 @@
 {
   "name": "grimoire-clients",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "private": true,
   "packageManager": "pnpm@11.8.0",
   "engines": {
