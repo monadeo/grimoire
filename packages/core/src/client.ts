@@ -211,8 +211,11 @@ export class GrimoireClient {
     });
   }
 
-  recrawlSource(sourceId: string): Promise<JobOut> {
-    return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/recrawl`, { method: "POST" });
+  recrawlSource(sourceId: string, opts: { failedOnly?: boolean } = {}): Promise<JobOut> {
+    const query = opts.failedOnly ? "?failed_only=true" : "";
+    return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/recrawl${query}`, {
+      method: "POST",
+    });
   }
 
   listFrontier(sourceId: string, filter: { status?: string; limit?: number } = {}): Promise<FrontierUrlOut[]> {

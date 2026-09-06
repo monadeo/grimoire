@@ -1736,7 +1736,9 @@ paths:
       description: 'Restart the crawl from the base URL; an open crawl or index of
         the
 
-        source is cancelled first so two runs never interleave.'
+        source is cancelled first so two runs never interleave. With failed_only,
+
+        only the pages that failed last time are fetched again.'
       operationId: recrawl_source_v1_staff_sources__source_id__recrawl_post
       parameters:
       - in: path
@@ -1746,6 +1748,13 @@ paths:
           format: uuid
           title: Source Id
           type: string
+      - in: query
+        name: failed_only
+        required: false
+        schema:
+          default: false
+          title: Failed Only
+          type: boolean
       responses:
         '200':
           content:

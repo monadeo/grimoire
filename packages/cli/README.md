@@ -51,7 +51,7 @@ Ask your administrator, quoting the subject that `grimoire login` prints.
 | `grimoire init` | Write a project `.grimoire.json` with default sources |
 | `grimoire config [<key>] [<value>] [--unset]` | Read or change client config: `api-url`, `update-check-hours`, `reranker`, `skill-links`, `auth-token`. With no `reranker` set, the server picks its default |
 | `grimoire mcp [--http]` | Print the command that starts the MCP server; the server itself is `@monadeo.com/grimoire-mcp` |
-| `grimoire update` | Update the client in place |
+| `grimoire update` | Update the client in place. Once a day the CLI checks for a newer version and prints a yellow notice on stderr in a terminal; `NO_COLOR` makes it plain |
 | `grimoire update skill` | Refresh the skill file and link it into the agents installed here |
 
 The CLI ships a skill, a `SKILL.md` that tells an agent when and how to call `grimoire`.
@@ -92,7 +92,7 @@ These need a staff account.
 | `grimoire staff source <product\|id> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo> [--tag-pattern <regex>])` | Correct how a source reads its version. Drops the chunks under the old label and reindexes from the stored crawl. |
 | `grimoire staff create <url> --product <name> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]...` | Register a source the worker cannot fetch; its pages come in through `staff upload` |
 | `grimoire staff upload <product\|id> <page-url> <file.html>` | Store one fetched page for an upload source; `staff recrawl` then processes what was uploaded |
-| `grimoire staff recrawl <product\|id>` | Fetch the site again |
+| `grimoire staff recrawl <product\|id> [--failed]` | Fetch the site again. `--failed` fetches only the pages that failed last time and leaves the rest untouched |
 | `grimoire staff reindex <product\|id>` | Index the stored crawl again, no fetching |
 | `grimoire staff purge <product\|id> --yes` | Delete a source and everything indexed from it |
 | `grimoire staff users [--json]` | Access grants |

@@ -366,7 +366,8 @@ export interface paths {
         /**
          * Recrawl Source
          * @description Restart the crawl from the base URL; an open crawl or index of the
-         *     source is cancelled first so two runs never interleave.
+         *     source is cancelled first so two runs never interleave. With failed_only,
+         *     only the pages that failed last time are fetched again.
          */
         post: operations["recrawl_source_v1_staff_sources__source_id__recrawl_post"];
         delete?: never;
@@ -1723,7 +1724,9 @@ export interface operations {
     };
     recrawl_source_v1_staff_sources__source_id__recrawl_post: {
         parameters: {
-            query?: never;
+            query?: {
+                failed_only?: boolean;
+            };
             header?: never;
             path: {
                 source_id: string;

@@ -33,13 +33,14 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire staff urls <product|id> [--state <crawl state>] [--limit 50] [--json]
   grimoire staff create <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]...
   grimoire staff upload <product|id> <page-url> <file.html>
-  grimoire staff recrawl <product|id> | reindex <product|id> | purge <product|id> --yes
+  grimoire staff recrawl <product|id> [--failed] | reindex <product|id> | purge <product|id> --yes
   grimoire mcp [--http]        prints the command that starts the MCP server
   grimoire help | --help | -h
   grimoire version | --version | -v
 
   env: GRIMOIRE_AUTH_TOKEN — machine token (CI, instead of login)
        GRIMOIRE_API_URL   — API origin without a path
+       NO_COLOR           — plain update notice
 `;
 
 // Canonical flag names each command accepts; parseArgs rejects anything else.
@@ -57,5 +58,5 @@ export const COMMAND_FLAGS: Record<string, readonly string[]> = {
   report: ["verdict", "note"],
   ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "include", "exclude", "watch"],
   jobs: ["watch"],
-  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "selector", "yes", "watch", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "staff", "product"],
+  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "selector", "yes", "watch", "failed", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "staff", "product"],
 };
