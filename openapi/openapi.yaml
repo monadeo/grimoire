@@ -27,6 +27,46 @@ components:
       - server_version
       title: AuthConfigOut
       type: object
+    BatchRequest:
+      properties:
+        attempt:
+          minimum: 1.0
+          title: Attempt
+          type: integer
+        job_id:
+          format: uuid
+          title: Job Id
+          type: string
+      required:
+      - job_id
+      - attempt
+      title: BatchRequest
+      type: object
+    BatchResult:
+      properties:
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        remaining:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Remaining
+        state:
+          enum:
+          - running
+          - completed
+          - failed
+          title: State
+          type: string
+      required:
+      - state
+      - remaining
+      - reason
+      title: BatchResult
+      type: object
     Candidate:
       properties:
         body_hash:
@@ -642,6 +682,13 @@ components:
             type: string
           title: Exclude Patterns
           type: array
+        executor:
+          default: worker
+          enum:
+          - worker
+          - queue
+          title: Executor
+          type: string
         frontier:
           additionalProperties:
             type: integer
@@ -788,6 +835,14 @@ components:
             type: array
           - type: 'null'
           title: Exclude Patterns
+        executor:
+          anyOf:
+          - enum:
+            - worker
+            - queue
+            type: string
+          - type: 'null'
+          title: Executor
         include_patterns:
           anyOf:
           - items:
@@ -1099,6 +1154,14 @@ components:
           format: date-time
           title: Started At
           type: string
+        state:
+          enum:
+          - busy
+          - idle
+          - stopped
+          - silent
+          title: State
+          type: string
         version:
           title: Version
           type: string
@@ -1110,6 +1173,7 @@ components:
       - last_progress_at
       - job_id
       - silent
+      - state
       title: WorkerOut
       type: object
   securitySchemes:
@@ -1178,6 +1242,42 @@ paths:
       security:
       - HTTPBearer: []
       summary: Get Doc
+  /v1/internal/batches:
+    post:
+      description: 'Run one bounded batch of a job for the queue service: a whole
+
+        submission probe, up to eight crawl pages, or one embed batch of an index
+
+        run. The call returns within ten minutes. Repeated calls for one job are
+
+        safe: the frontier and the job lease decide what is left.'
+      operationId: run_batch_v1_internal_batches_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+          description: Successful Response
+        '409':
+          description: A step of this job is already running here; call again later.
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+        '503':
+          description: Every child slot is taken, or this container runs no batches.
+      security:
+      - HTTPBearer: []
+      summary: Run Batch
   /v1/jobs/{job_id}:
     get:
       operationId: get_job_v1_jobs__job_id__get

@@ -55,6 +55,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/internal/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Batch
+         * @description Run one bounded batch of a job for the queue service: a whole
+         *     submission probe, up to eight crawl pages, or one embed batch of an index
+         *     run. The call returns within ten minutes. Repeated calls for one job are
+         *     safe: the frontier and the job lease decide what is left.
+         */
+        post: operations["run_batch_v1_internal_batches_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/jobs/{job_id}": {
         parameters: {
             query?: never;
@@ -494,6 +517,28 @@ export interface components {
             /** Supabase Url */
             supabase_url: string;
         };
+        /** BatchRequest */
+        BatchRequest: {
+            /** Attempt */
+            attempt: number;
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+        };
+        /** BatchResult */
+        BatchResult: {
+            /** Reason */
+            reason: string | null;
+            /** Remaining */
+            remaining: number | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "running" | "completed" | "failed";
+        };
         /** Candidate */
         Candidate: {
             /** Body Hash */
@@ -815,6 +860,12 @@ export interface components {
             descoped_urls: number;
             /** Exclude Patterns */
             exclude_patterns: string[];
+            /**
+             * Executor
+             * @default worker
+             * @enum {string}
+             */
+            executor: "worker" | "queue";
             /** Frontier */
             frontier: {
                 [key: string]: number;
@@ -888,6 +939,8 @@ export interface components {
             content_selector?: string | null;
             /** Exclude Patterns */
             exclude_patterns?: string[] | null;
+            /** Executor */
+            executor?: ("worker" | "queue") | null;
             /** Include Patterns */
             include_patterns?: string[] | null;
             /** Page Markdown */
@@ -1053,6 +1106,11 @@ export interface components {
              * Format: date-time
              */
             started_at: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "busy" | "idle" | "stopped" | "silent";
             /** Version */
             version: string;
         };
@@ -1135,6 +1193,53 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    run_batch_v1_internal_batches_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchResult"];
+                };
+            };
+            /** @description A step of this job is already running here; call again later. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Every child slot is taken, or this container runs no batches. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

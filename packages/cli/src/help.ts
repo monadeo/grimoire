@@ -28,7 +28,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire staff workers [--json]
   grimoire staff cancel <job_id>
   grimoire staff source <product|id> [--watch] [--json]
-  grimoire staff source <product|id> [--include <pattern>]... [--exclude <pattern>]... [--status active|disabled] [--markdown on|off] [--selector <css>|none]
+  grimoire staff source <product|id> [--include <pattern>]... [--exclude <pattern>]... [--status active|disabled] [--markdown on|off] [--selector <css>|none] [--executor worker|queue]
   grimoire staff source <product|id> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>])
   grimoire staff urls <product|id> [--state <crawl state>] [--limit 50] [--json]
   grimoire staff create <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]...
@@ -58,5 +58,5 @@ export const COMMAND_FLAGS: Record<string, readonly string[]> = {
   report: ["verdict", "note"],
   ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "include", "exclude", "watch"],
   jobs: ["watch"],
-  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "selector", "yes", "watch", "failed", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "staff", "product"],
+  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "selector", "executor", "yes", "watch", "failed", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "staff", "product"],
 };

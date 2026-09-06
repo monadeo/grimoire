@@ -148,6 +148,8 @@ function describeSource(detail: SourceDetailOut): string {
     `versions: ${detail.versions.length > 0 ? detail.versions.join(", ") : "(not indexed yet)"}`,
     `include: ${detail.include_patterns.join(" ") || "(all)"}  exclude: ${detail.exclude_patterns.join(" ") || "(none)"}`,
     ...(detail.content_selector ? [`selector: ${detail.content_selector}`] : []),
+    // Servers before 0.27.0 do not say; the workers ran everything then.
+    ...(detail.executor === "queue" ? ["executor: queue service"] : []),
     `frontier: ${frontier || "(empty)"}`,
     `indexed: ${detail.indexed_pages} page(s) at the current config`,
     `job: ${detail.job ? `${detail.job.kind} ${describeJob(detail.job)}` : "none running"}`,
@@ -184,7 +186,9 @@ function describeWorker(w: WorkerOut): string {
   const holding = w.job_id
     ? `job ${w.job_id}  last batch ${secondsSince(w.last_progress_at ?? w.last_seen)}s ago`
     : "idle";
-  return `${w.id}  v${w.version}  seen ${secondsSince(w.last_seen)}s ago${w.silent ? "  SILENT" : ""}  ${holding}`;
+  // Servers before 0.27.0 send only the silent flag.
+  const state = w.state ?? (w.silent ? "silent" : w.job_id ? "busy" : "idle");
+  return `${w.id}  v${w.version}  seen ${secondsSince(w.last_seen)}s ago  ${state.toUpperCase()}  ${holding}`;
 }
 
 function describeJob(job: JobOut): string {
@@ -378,7 +382,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | workers [--json] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--selector css|none] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> [--failed] | reindex <s> | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | workers [--json] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--selector css|none] [--executor worker|queue] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> [--failed] | reindex <s> | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -466,8 +470,11 @@ async function main(argv: string[]): Promise<number> {
           const markdown = args.flags.markdown?.[0];
           if (markdown !== undefined && markdown !== "on" && markdown !== "off") throw new UsageError(usage);
           const selector = args.flags.selector?.[0];
+          const executor = args.flags.executor?.[0];
+          if (executor !== undefined && executor !== "worker" && executor !== "queue") throw new UsageError(usage);
           const edit: SourceScopeIn = {};
           if (selector !== undefined) edit.content_selector = selector === "none" ? "" : selector;
+          if (executor) edit.executor = executor;
           if (args.flags.include) edit.include_patterns = args.flags.include;
           if (args.flags.exclude) edit.exclude_patterns = args.flags.exclude;
           if (status) edit.status = status;
