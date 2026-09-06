@@ -53,6 +53,26 @@ describe("notifyIfOutdated", () => {
     }
   });
 
+  it("colours the notice unless NO_COLOR is set", () => {
+    fakeTty(true);
+    mkdirSync(join(dir, "grimoire"), { recursive: true });
+    writeFileSync(join(dir, "grimoire", "update-check.json"), JSON.stringify({ latest: "9.9.9" }));
+    const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    try {
+      delete process.env.NO_COLOR;
+      notifyIfOutdated("0.3.2");
+      expect(stderr).toHaveBeenLastCalledWith(
+        "\x1b[33mgrimoire 9.9.9 is available (you have 0.3.2) — run `grimoire update`\x1b[0m\n",
+      );
+      process.env.NO_COLOR = "1";
+      notifyIfOutdated("0.3.2");
+      expect(stderr).toHaveBeenLastCalledWith(expect.not.stringContaining("\x1b["));
+    } finally {
+      delete process.env.NO_COLOR;
+      stderr.mockRestore();
+    }
+  });
+
   it("stays silent off-TTY and for dev builds", () => {
     fakeTty(false);
     mkdirSync(join(dir, "grimoire"), { recursive: true });

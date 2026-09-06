@@ -40,8 +40,14 @@ export function notifyIfOutdated(current: string): void {
   if (current === "dev" || !process.stderr.isTTY) return;
   const { latest } = readState();
   if (latest && newerVersion(latest, current)) {
-    process.stderr.write(`grimoire ${latest} is available (you have ${current}) — run \`grimoire update\`\n`);
+    process.stderr.write(`${yellow(`grimoire ${latest} is available (you have ${current}) — run \`grimoire update\``)}\n`);
   }
+}
+
+// The notice is the one line meant for a person, so it stands out; NO_COLOR
+// (no-color.org) turns that off. Off-TTY output never gets here.
+function yellow(text: string): string {
+  return process.env.NO_COLOR ? text : `\x1b[33m${text}\x1b[0m`;
 }
 
 // Best-effort, TTY-only, and never slows a command down by more than the fetch
