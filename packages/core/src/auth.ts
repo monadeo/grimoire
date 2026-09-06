@@ -10,7 +10,7 @@ import { fetchWithTimeout } from "./http.js";
 // keychain ACLs are per binary, so every agent runtime spawning the MCP server
 // re-prompted the user — gcloud and Codex accept the same file-based model.
 // A machine token via GRIMOIRE_AUTH_TOKEN overrides interactive auth (CI only).
-function configDir(): string {
+export function configDir(): string {
   return join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "grimoire");
 }
 

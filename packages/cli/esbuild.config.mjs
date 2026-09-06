@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 import { build } from "esbuild";
 
 const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+const skill = readFileSync(new URL("./skill/SKILL.md", import.meta.url), "utf8");
 
 await build({
-  define: { __GRIMOIRE_VERSION__: JSON.stringify(pkg.version) },
+  define: { __GRIMOIRE_VERSION__: JSON.stringify(pkg.version), __GRIMOIRE_SKILL__: JSON.stringify(skill) },
   entryPoints: ["src/index.ts"],
   bundle: true,
   platform: "node",

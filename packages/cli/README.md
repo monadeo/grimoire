@@ -7,7 +7,7 @@ documentation-retrieval service for AI coding agents.
 npm install -g @monadeo.com/grimoire-cli
 grimoire login
 grimoire search "revalidateTag on-demand cache invalidation" -s nextjs@15
-grimoire setup claude-code   # wire the MCP server into your agent
+grimoire setup claude-code   # wire the MCP server and the skill into your agent
 ```
 
 `grimoire help` prints the same list and is the authoritative one.
@@ -49,9 +49,18 @@ Ask your administrator, quoting the subject that `grimoire login` prints.
 |---|---|
 | `grimoire setup <claude-code\|cursor\|windsurf\|codex>` | Wire the MCP server into an agent |
 | `grimoire init` | Write a project `.grimoire.json` with default sources |
-| `grimoire config [<key>] [<value>] [--unset]` | Read or change client config: `api-url`, `update-check-hours`, `reranker`, `auth-token`. With no `reranker` set, the server picks its default |
+| `grimoire config [<key>] [<value>] [--unset]` | Read or change client config: `api-url`, `update-check-hours`, `reranker`, `skill-links`, `auth-token`. With no `reranker` set, the server picks its default |
 | `grimoire mcp [--http]` | Print the command that starts the MCP server; the server itself is `@monadeo.com/grimoire-mcp` |
 | `grimoire update` | Update the client in place |
+| `grimoire update skill` | Refresh the skill file and link it into the agents installed here |
+
+The CLI ships a skill, a `SKILL.md` that tells an agent when and how to call `grimoire`.
+The file lives at `~/.config/grimoire/skills/grimoire/SKILL.md` and is refreshed on every
+run, so it always matches the installed client. Agents read it through a symlink:
+`~/.claude/skills/grimoire` for Claude Code, `~/.agents/skills/grimoire` for Codex. The
+first time the CLI runs in a terminal it names the links it would create and asks; a no
+is remembered as `skill-links off`. `grimoire setup` and `grimoire update skill` ask
+again. Agents calling the CLI without a terminal are never asked.
 
 ## Ingestion
 

@@ -13,6 +13,8 @@ export interface GlobalConfig {
   updateCheckHours?: number;
   /** Reranker sent with every search; unset means the server's local default. */
   reranker?: string;
+  /** "off" after the user declined the agent skill links; the CLI then stops asking. */
+  skillLinks?: "on" | "off";
 }
 
 export interface ProjectConfig {

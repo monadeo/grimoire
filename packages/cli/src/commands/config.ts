@@ -41,6 +41,14 @@ export const CONFIG_KEYS: Record<string, KeySpec> = {
     describe: "hours between CLI update checks (default 24, 0 disables)",
     parse: (raw) => intInRange("update-check-hours", raw, 0),
   },
+  "skill-links": {
+    prop: "skillLinks",
+    describe: "off stops the offer to link the skill into agents; `grimoire update skill` still does it",
+    parse: (raw) => {
+      if (raw !== "on" && raw !== "off") throw new UsageError("skill-links must be on or off");
+      return raw;
+    },
+  },
   reranker: {
     prop: "reranker",
     describe: "reranker for every search, one of `grimoire whoami`; unset means the server default",

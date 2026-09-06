@@ -15,7 +15,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire sources [-q <keyword>] [--names|--json]
   grimoire versions <product> [--json]
   grimoire config [<key>] [<value>] [--unset]
-  grimoire update
+  grimoire update [skill]
   grimoire doc <point_id> [--window 0-5] [--json]
   grimoire report <point_id> --verdict helpful|incorrect|outdated [--note "..."]
   grimoire ingest <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>])

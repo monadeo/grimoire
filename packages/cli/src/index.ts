@@ -26,6 +26,7 @@ import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
 import { runConfig } from "./commands/config.js";
 import { runUpdate } from "./commands/update.js";
+import { offerSkillLinks, runUpdateSkill } from "./commands/skill.js";
 import { submissionFromArgs } from "./commands/ingest.js";
 import { notifyIfOutdated, refreshUpdateState } from "./updatecheck.js";
 
@@ -217,14 +218,21 @@ async function main(argv: string[]): Promise<number> {
       clearSession();
       process.stdout.write("Logged out.\n");
       return EXIT.ok;
-    case "setup":
-      return runSetup(args.positionals[0]);
+    case "setup": {
+      const code = runSetup(args.positionals[0]);
+      if (code !== EXIT.ok) return code;
+      return runUpdateSkill();
+    }
     case "init":
       return runInit();
     case "config":
       return runConfig(args);
-    case "update":
+    case "update": {
+      const what = args.positionals[0];
+      if (what === "skill") return runUpdateSkill();
+      if (what !== undefined) throw new UsageError("Usage: grimoire update [skill]");
       return runUpdate();
+    }
     case "mcp":
       process.stderr.write("Run the MCP server with: npx @monadeo.com/grimoire-mcp" + (args.bools.has("http") ? " --http\n" : "\n"));
       return EXIT.ok;
@@ -621,9 +629,14 @@ async function exit(code: number): Promise<never> {
   process.exit(code);
 }
 
+// Commands that manage the skill themselves, or that print nothing an agent
+// would act on, never get the first-run offer.
+const NO_SKILL_OFFER = new Set(["setup", "update", "help", "--help", "-h", "version", "--version", "-v", "mcp", undefined]);
+
 notifyIfOutdated(VERSION);
 main(process.argv.slice(2))
   .then(async (code) => {
+    if (code === EXIT.ok && !NO_SKILL_OFFER.has(process.argv[2])) await offerSkillLinks();
     await refreshUpdateState(VERSION, loadGlobalConfig().updateCheckHours);
     await exit(code);
   })

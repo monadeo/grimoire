@@ -21,6 +21,7 @@ export {
   storeMachineToken,
   readMachineToken,
   clearMachineToken,
+  configDir,
   type AuthConfig,
   type StoredSession,
   type TokenResponse,
