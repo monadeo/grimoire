@@ -1,4 +1,4 @@
-import type { SearchResponse, SearchResult } from "@monadeo.com/grimoire-core";
+import type { ApiError, SearchResponse, SearchResult } from "@monadeo.com/grimoire-core";
 
 // Exit codes documented for scripting (clients spec).
 export const EXIT = { ok: 0, apiError: 1, authRequired: 2, quota: 3, notFound: 4 } as const;
@@ -50,4 +50,21 @@ export function printCompact(res: SearchResponse): void {
       `${r.score.toFixed(3)} | ${r.product}@${r.version} | ${heading(r)} | ${r.source_url} | ${r.point_id}\n`,
     );
   }
+}
+
+// A proxy in front of the API answers an outage with an HTML page. Nobody
+// wants that page in a terminal: name the status and, when the proxy says
+// why, its one-line reason.
+export function describeError(err: ApiError): string {
+  if (typeof err.body === "string" && /^\s*<(!doctype|html)/i.test(err.body)) {
+    const reason = /"statusText":"([^"]*)"/.exec(err.body)?.[1];
+    return `error: the API is unreachable — the proxy answered HTTP ${err.status}${reason ? ` (${reason})` : ""}`;
+  }
+  const detail =
+    typeof err.body === "string"
+      ? err.body
+      : err.body !== undefined && err.body !== null
+        ? JSON.stringify(err.body)
+        : "";
+  return `error: ${err.code}${detail ? ` — ${detail}` : ""}`;
 }

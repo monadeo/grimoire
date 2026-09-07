@@ -21,7 +21,7 @@ import {
 } from "@monadeo.com/grimoire-core";
 import { parseArgs, requirePositional, requireFlagOneOf, intFlag, UsageError, type ParsedArgs } from "./args.js";
 import { COMMAND_FLAGS, HELP, VERSION } from "./help.js";
-import { printResults, printCompact, printTimings, EXIT } from "./output.js";
+import { printResults, printCompact, printTimings, describeError, EXIT } from "./output.js";
 import { runSetup } from "./commands/setup.js";
 import { runInit } from "./commands/init.js";
 import { runConfig } from "./commands/config.js";
@@ -62,15 +62,6 @@ function toSelectors(pins: SourcePin[]): SourceSelector[] {
 // Injected by esbuild from package.json at build time ("dev" when running
 // unbundled source, e.g. under vitest).
 
-function describeError(err: ApiError): string {
-  const detail =
-    typeof err.body === "string"
-      ? err.body
-      : err.body !== undefined && err.body !== null
-        ? JSON.stringify(err.body)
-        : "";
-  return `error: ${err.code}${detail ? ` — ${detail}` : ""}`;
-}
 
 // "email (kind subject) staff quota N/day", or the email with a plain reason
 // when the account has no Grimoire grant yet — the login itself succeeded.
