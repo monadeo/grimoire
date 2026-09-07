@@ -188,7 +188,8 @@ function describeWorker(w: WorkerOut): string {
     : "idle";
   // Servers before 0.27.0 send only the silent flag.
   const state = w.state ?? (w.silent ? "silent" : w.job_id ? "busy" : "idle");
-  return `${w.id}  v${w.version}  seen ${secondsSince(w.last_seen)}s ago  ${state.toUpperCase()}  ${holding}`;
+  const via = w.via === "queue" ? "  queue" : "";
+  return `${w.id}  v${w.version}  seen ${secondsSince(w.last_seen)}s ago  ${state.toUpperCase()}${via}  ${holding}`;
 }
 
 function describeJob(job: JobOut): string {

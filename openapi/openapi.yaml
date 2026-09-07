@@ -1165,6 +1165,13 @@ components:
         version:
           title: Version
           type: string
+        via:
+          default: grimoire
+          enum:
+          - grimoire
+          - queue
+          title: Via
+          type: string
       required:
       - id
       - version
@@ -1998,12 +2005,12 @@ paths:
       summary: Revoke User
   /v1/staff/workers:
     get:
-      description: 'Every worker process seen in the last day, with the job it holds.
-        A
+      description: 'Every worker process seen in the last day, with the job it holds,
+        and
 
-        silent one stopped reporting; the job it held frees up when its lease
+        the queue service''s dispatchers behind them. A silent one stopped
 
-        runs out.'
+        reporting; the job it held frees up when its lease runs out.'
       operationId: list_workers_v1_staff_workers_get
       responses:
         '200':

@@ -487,9 +487,9 @@ export interface paths {
         };
         /**
          * List Workers
-         * @description Every worker process seen in the last day, with the job it holds. A
-         *     silent one stopped reporting; the job it held frees up when its lease
-         *     runs out.
+         * @description Every worker process seen in the last day, with the job it holds, and
+         *     the queue service's dispatchers behind them. A silent one stopped
+         *     reporting; the job it held frees up when its lease runs out.
          */
         get: operations["list_workers_v1_staff_workers_get"];
         put?: never;
@@ -1113,6 +1113,12 @@ export interface components {
             state: "busy" | "idle" | "stopped" | "silent";
             /** Version */
             version: string;
+            /**
+             * Via
+             * @default grimoire
+             * @enum {string}
+             */
+            via: "grimoire" | "queue";
         };
     };
     responses: never;

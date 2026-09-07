@@ -84,7 +84,7 @@ These need a staff account.
 | `grimoire staff approve <job_id>` | Accept a parked submission |
 | `grimoire staff reject <job_id> --reason "..."` | Reject one |
 | `grimoire staff jobs [--source <product\|id>] [--state <state>] [--kind <kind>] [--limit 50] [--json]` | Recent jobs with their failure reasons |
-| `grimoire staff workers [--json]` | Worker processes seen in the last day: version, last heartbeat, state and the job each holds. BUSY holds a job, IDLE waits, STOPPED ended on purpose, SILENT stopped reporting for 60 seconds |
+| `grimoire staff workers [--json]` | Worker processes seen in the last day: version, last heartbeat, state and the job each holds. BUSY holds a job, IDLE waits, STOPPED ended on purpose, SILENT stopped reporting for 60 seconds. `queue` marks a dispatcher of the queue service |
 | `grimoire staff cancel <job_id>` | Stop a queued or running crawl or index |
 | `grimoire staff source <product\|id> [--watch] [--json]` | Where a source stands: route, scope, versions, crawl state, pages indexed, and the job it is in. `--watch` prints a line whenever that changes, until the job ends. |
 | `grimoire staff urls <product\|id> [--state <crawl state>] [--limit 50] [--json]` | Every URL of a source with its crawl state, failures first and why |
