@@ -390,7 +390,8 @@ export interface paths {
          * Recrawl Source
          * @description Restart the crawl from the base URL; an open crawl or index of the
          *     source is cancelled first so two runs never interleave. With failed_only,
-         *     only the pages that failed last time are fetched again.
+         *     only the pages that failed or were never fetched last time are fetched
+         *     again; a crawl that a dead browser cut short leaves such pages behind.
          */
         post: operations["recrawl_source_v1_staff_sources__source_id__recrawl_post"];
         delete?: never;
@@ -862,7 +863,7 @@ export interface components {
             exclude_patterns: string[];
             /**
              * Executor
-             * @default worker
+             * @default queue
              * @enum {string}
              */
             executor: "worker" | "queue";
@@ -884,6 +885,11 @@ export interface components {
             page_markdown: boolean;
             /** Product */
             product: string;
+            /**
+             * Rate Delay Seconds
+             * @default 0
+             */
+            rate_delay_seconds: number;
             /**
              * Route
              * @enum {string}
@@ -946,6 +952,8 @@ export interface components {
             /** Page Markdown */
             page_markdown?: boolean | null;
             probe?: components["schemas"]["ProbeConfig"] | null;
+            /** Rate Delay Seconds */
+            rate_delay_seconds?: number | null;
             /** Status */
             status?: ("active" | "disabled") | null;
             version_rule?: components["schemas"]["VersionRule"] | null;

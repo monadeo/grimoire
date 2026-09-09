@@ -683,7 +683,7 @@ components:
           title: Exclude Patterns
           type: array
         executor:
-          default: worker
+          default: queue
           enum:
           - worker
           - queue
@@ -716,6 +716,10 @@ components:
         product:
           title: Product
           type: string
+        rate_delay_seconds:
+          default: 0
+          title: Rate Delay Seconds
+          type: number
         route:
           enum:
           - browser
@@ -859,6 +863,13 @@ components:
           anyOf:
           - $ref: '#/components/schemas/ProbeConfig'
           - type: 'null'
+        rate_delay_seconds:
+          anyOf:
+          - maximum: 60.0
+            minimum: 0.0
+            type: number
+          - type: 'null'
+          title: Rate Delay Seconds
         status:
           anyOf:
           - enum:
@@ -1845,7 +1856,9 @@ paths:
 
         source is cancelled first so two runs never interleave. With failed_only,
 
-        only the pages that failed last time are fetched again.'
+        only the pages that failed or were never fetched last time are fetched
+
+        again; a crawl that a dead browser cut short leaves such pages behind.'
       operationId: recrawl_source_v1_staff_sources__source_id__recrawl_post
       parameters:
       - in: path
