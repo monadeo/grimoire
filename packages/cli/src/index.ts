@@ -187,7 +187,11 @@ function describeWorker(w: WorkerOut): string {
 function describeJob(job: JobOut): string {
   // A job left behind by a restart still says "running"; say so plainly.
   const state = job.stalled ? `${job.state} (stalled, waiting to be picked up)` : job.state;
-  const extra = [job.reason ? `reason: ${job.reason}` : "", job.source_id ? `source: ${job.source_id}` : ""]
+  const extra = [
+    job.reason ? `reason: ${job.reason}` : "",
+    job.source_id ? `source: ${job.source_id}` : "",
+    !job.source_id && job.url ? `url: ${job.url}` : "",
+  ]
     .filter(Boolean)
     .join("  ");
   return `${state}${extra ? `  ${extra}` : ""}`;
@@ -529,7 +533,11 @@ async function main(argv: string[]): Promise<number> {
           const queue = await client.reviewQueue();
           if (json) process.stdout.write(JSON.stringify(queue, null, 2) + "\n");
           else if (queue.length === 0) process.stdout.write("review queue is empty\n");
-          else for (const job of queue) process.stdout.write(`${job.id}  ${describeJob(job)}\n`);
+          else
+            for (const job of queue)
+              process.stdout.write(
+                `${job.product ?? "(no product)"}  ${job.url ?? "(no url)"}\n  ${job.id}  ${describeJob(job)}\n`,
+              );
           return EXIT.ok;
         }
         if (!jobId) throw new UsageError(usage);

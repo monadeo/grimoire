@@ -216,6 +216,11 @@ components:
         kind:
           title: Kind
           type: string
+        product:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Product
         reason:
           anyOf:
           - type: string
@@ -238,6 +243,11 @@ components:
           format: date-time
           title: Updated At
           type: string
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
       required:
       - id
       - kind

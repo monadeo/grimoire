@@ -618,6 +618,8 @@ export interface components {
             id: string;
             /** Kind */
             kind: string;
+            /** Product */
+            product?: string | null;
             /** Reason */
             reason: string | null;
             /** Source Id */
@@ -634,6 +636,8 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /** Url */
+            url?: string | null;
         };
         /** MeOut */
         MeOut: {
