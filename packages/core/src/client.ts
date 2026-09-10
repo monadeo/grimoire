@@ -239,8 +239,11 @@ export class GrimoireClient {
     });
   }
 
-  reindexSource(sourceId: string): Promise<JobOut> {
-    return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/reindex`, { method: "POST" });
+  reindexSource(sourceId: string, opts: { urgent?: boolean } = {}): Promise<JobOut> {
+    const query = opts.urgent ? "?urgent=true" : "";
+    return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/reindex${query}`, {
+      method: "POST",
+    });
   }
 
   sourceDetail(sourceId: string): Promise<SourceDetailOut> {

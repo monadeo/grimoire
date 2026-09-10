@@ -412,7 +412,8 @@ export interface paths {
         /**
          * Reindex Source
          * @description Index the stored crawl again without fetching: after a failed index
-         *     run or a scope change.
+         *     run or a scope change. An urgent run goes before every other job, which
+         *     is how a new source is judged while a long backlog indexes.
          */
         post: operations["reindex_source_v1_staff_sources__source_id__reindex_post"];
         delete?: never;
@@ -1878,7 +1879,9 @@ export interface operations {
     };
     reindex_source_v1_staff_sources__source_id__reindex_post: {
         parameters: {
-            query?: never;
+            query?: {
+                urgent?: boolean;
+            };
             header?: never;
             path: {
                 source_id: string;

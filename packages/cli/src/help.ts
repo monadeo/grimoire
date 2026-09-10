@@ -33,7 +33,7 @@ export const HELP = `grimoire ${VERSION} — documentation retrieval for AI agen
   grimoire staff urls <product|id> [--state <crawl state>] [--limit 50] [--json]
   grimoire staff create <url> --product <name> (--rolling | --fixed <version> | --npm <pkg> | --pypi <pkg> | --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]...
   grimoire staff upload <product|id> <page-url> <file.html>
-  grimoire staff recrawl <product|id> [--failed] | reindex <product|id> | purge <product|id> --yes
+  grimoire staff recrawl <product|id> [--failed] | reindex <product|id> [--urgent] | purge <product|id> --yes
   grimoire mcp [--http]        prints the command that starts the MCP server
   grimoire help | --help | -h
   grimoire version | --version | -v
@@ -58,5 +58,5 @@ export const COMMAND_FLAGS: Record<string, readonly string[]> = {
   report: ["verdict", "note"],
   ingest: ["product", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "include", "exclude", "watch"],
   jobs: ["watch"],
-  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "selector", "executor", "rate-delay", "yes", "watch", "failed", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "staff", "product"],
+  staff: ["reason", "name", "quota", "json", "source", "state", "kind", "limit", "include", "exclude", "status", "markdown", "selector", "executor", "rate-delay", "yes", "watch", "failed", "urgent", "rolling", "fixed", "npm", "pypi", "github", "tag-pattern", "staff", "product"],
 };

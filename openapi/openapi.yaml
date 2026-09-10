@@ -1903,7 +1903,9 @@ paths:
       description: 'Index the stored crawl again without fetching: after a failed
         index
 
-        run or a scope change.'
+        run or a scope change. An urgent run goes before every other job, which
+
+        is how a new source is judged while a long backlog indexes.'
       operationId: reindex_source_v1_staff_sources__source_id__reindex_post
       parameters:
       - in: path
@@ -1913,6 +1915,13 @@ paths:
           format: uuid
           title: Source Id
           type: string
+      - in: query
+        name: urgent
+        required: false
+        schema:
+          default: false
+          title: Urgent
+          type: boolean
       responses:
         '200':
           content:

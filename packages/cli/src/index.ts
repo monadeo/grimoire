@@ -383,7 +383,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | workers [--json] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--selector css|none] [--executor worker|queue] [--rate-delay s] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> [--failed] | reindex <s> | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | workers [--json] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--selector css|none] [--executor worker|queue] [--rate-delay s] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> [--failed] | reindex <s> [--urgent] | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -434,7 +434,9 @@ async function main(argv: string[]): Promise<number> {
         }
         if (action === "reindex") {
           if (!jobId) throw new UsageError(usage);
-          process.stdout.write(`${describeJob(await client.reindexSource(await resolveSourceId(client, jobId)))}\n`);
+          const source = await resolveSourceId(client, jobId);
+          const job = await client.reindexSource(source, { urgent: args.bools.has("urgent") });
+          process.stdout.write(`${describeJob(job)}\n`);
           return EXIT.ok;
         }
         if (action === "cancel") {
