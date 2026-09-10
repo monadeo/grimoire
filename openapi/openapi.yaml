@@ -738,6 +738,11 @@ components:
           - zendesk
           title: Route
           type: string
+        sitemap_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sitemap Url
         status:
           title: Status
           type: string
@@ -886,6 +891,11 @@ components:
             type: number
           - type: 'null'
           title: Rate Delay Seconds
+        sitemap_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sitemap Url
         status:
           anyOf:
           - enum:

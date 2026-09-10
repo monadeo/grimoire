@@ -142,6 +142,7 @@ function describeSource(detail: SourceDetailOut): string {
     // Servers before 0.27.0 do not say; the workers ran everything then.
     ...(detail.executor === "queue" ? ["executor: queue service"] : []),
     ...(detail.rate_delay_seconds ? [`rate delay: ${detail.rate_delay_seconds}s between pages`] : []),
+    ...(detail.sitemap_url ? [`sitemap: ${detail.sitemap_url}`] : []),
     `frontier: ${frontier || "(empty)"}`,
     `indexed: ${detail.indexed_pages} page(s) at the current config`,
     `job: ${detail.job ? `${detail.job.kind} ${describeJob(detail.job)}` : "none running"}`,
@@ -387,7 +388,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | workers [--json] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--selector css|none] [--executor worker|queue] [--rate-delay s] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> [--failed] | reindex <s> [--urgent] | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | workers [--json] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--selector css|none] [--executor worker|queue] [--rate-delay s] [--sitemap url] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> [--failed] | reindex <s> [--urgent] | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -483,7 +484,12 @@ async function main(argv: string[]): Promise<number> {
           if (rateDelay !== undefined && !(Number(rateDelay) >= 0 && Number(rateDelay) <= 60)) {
             throw new UsageError("--rate-delay takes seconds between two pages, 0 to 60; 0 clears it");
           }
+          const sitemap = args.flags.sitemap?.[0];
+          if (sitemap !== undefined && !/^https?:\/\//.test(sitemap)) {
+            throw new UsageError("--sitemap takes the full URL of the sitemap to seed from");
+          }
           const edit: SourceScopeIn = {};
+          if (sitemap !== undefined) edit.sitemap_url = sitemap;
           if (rateDelay !== undefined) edit.rate_delay_seconds = Number(rateDelay);
           if (selector !== undefined) edit.content_selector = selector === "none" ? "" : selector;
           if (executor) edit.executor = executor;

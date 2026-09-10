@@ -900,6 +900,8 @@ export interface components {
              * @enum {string}
              */
             route: "browser" | "markdown" | "upload" | "zendesk";
+            /** Sitemap Url */
+            sitemap_url?: string | null;
             /** Status */
             status: string;
             /** Versions */
@@ -961,6 +963,8 @@ export interface components {
             probe?: components["schemas"]["ProbeConfig"] | null;
             /** Rate Delay Seconds */
             rate_delay_seconds?: number | null;
+            /** Sitemap Url */
+            sitemap_url?: string | null;
             /** Status */
             status?: ("active" | "disabled") | null;
             version_rule?: components["schemas"]["VersionRule"] | null;
