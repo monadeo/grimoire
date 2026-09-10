@@ -305,7 +305,8 @@ async function main(argv: string[]): Promise<number> {
         } else if (args.bools.has("names")) {
           for (const s of sources) process.stdout.write(`${s.product}\n`);
         } else {
-          // Sources still being ingested first, then the rest by name; columns
+          // Work in progress first, the longest-running at the very top, so a
+          // job that never ends cannot hide; then the rest by name; columns
           // padded so the eye can run down each one.
           const rows = sources
             .map((s) => ({
@@ -317,8 +318,15 @@ async function main(argv: string[]): Promise<number> {
               via: s.route === "upload" ? "upload" : "crawl",
               url: s.base_url,
               pending: s.stage ? s.stage !== "indexed" : s.versions.length === 0,
+              startedAt: s.active_since ? Date.parse(s.active_since) : null,
             }))
-            .sort((a, b) => Number(b.pending) - Number(a.pending) || a.product.localeCompare(b.product));
+            .sort(
+              (a, b) =>
+                Number(b.startedAt !== null) - Number(a.startedAt !== null) ||
+                (a.startedAt !== null && b.startedAt !== null ? a.startedAt - b.startedAt : 0) ||
+                Number(b.pending) - Number(a.pending) ||
+                a.product.localeCompare(b.product),
+            );
           const w1 = Math.max(...rows.map((r) => r.product.length));
           const w2 = Math.max(...rows.map((r) => r.versions.length));
           const w3 = Math.max(...rows.map((r) => r.stage.length));

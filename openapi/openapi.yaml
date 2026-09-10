@@ -753,6 +753,12 @@ components:
       type: object
     SourceOut:
       properties:
+        active_since:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Active Since
         base_url:
           title: Base Url
           type: string
@@ -1671,9 +1677,10 @@ paths:
       summary: Create Upload Source
   /v1/staff/sources/{source_id}:
     delete:
-      description: 'Remove a source and everything indexed from it. Stored crawl artifacts
+      description: 'Remove a source and everything indexed from it, its stored page
+        files
 
-        on disk are left for the operator to clean.'
+        included.'
       operationId: purge_source_v1_staff_sources__source_id__delete
       parameters:
       - in: path

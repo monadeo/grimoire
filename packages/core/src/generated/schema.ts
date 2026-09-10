@@ -321,8 +321,8 @@ export interface paths {
         post?: never;
         /**
          * Purge Source
-         * @description Remove a source and everything indexed from it. Stored crawl artifacts
-         *     on disk are left for the operator to clean.
+         * @description Remove a source and everything indexed from it, its stored page files
+         *     included.
          */
         delete: operations["purge_source_v1_staff_sources__source_id__delete"];
         options?: never;
@@ -902,6 +902,8 @@ export interface components {
         };
         /** SourceOut */
         SourceOut: {
+            /** Active Since */
+            active_since?: string | null;
             /** Base Url */
             base_url: string;
             /** Chunks */
