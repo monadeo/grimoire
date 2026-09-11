@@ -152,6 +152,13 @@ function describeSource(detail: SourceDetailOut): string {
 }
 
 // One word for where a source stands, with the count that moves in that stage.
+function percentIndexed(s: SourceOut): string {
+  // A source is searchable only once every page is in, so the share of pages
+  // already indexed is how far it has to go.
+  if (s.pages_done === 0) return "";
+  return `(${Math.floor((s.pages_indexed / s.pages_done) * 100)}%)`;
+}
+
 function describeStage(s: SourceOut): string {
   // A server older than 0.23.1 sends no stage; say what the versions say.
   if (!s.stage) return s.versions.length > 0 ? "indexed" : "pending";
@@ -161,9 +168,9 @@ function describeStage(s: SourceOut): string {
     case "crawling":
       return `crawling ${s.pages_done}/${s.pages_total}`;
     case "waiting_index":
-      return "waiting to index";
+      return `waiting to index ${percentIndexed(s)}`;
     case "indexing":
-      return `indexing ${s.pages_indexed}/${s.pages_done}`;
+      return `indexing ${s.pages_indexed}/${s.pages_done} ${percentIndexed(s)}`;
     case "indexed":
       return s.indexed_at ? `indexed ${s.indexed_at.slice(0, 10)}` : "indexed";
     default:
@@ -318,7 +325,7 @@ async function main(argv: string[]): Promise<number> {
               product: s.product,
               versions: s.versions.length > 0 ? s.versions.join(", ") : "-",
               stage: describeStage(s),
-              size: s.chunks > 0 ? `${s.pages_indexed}p ${s.chunks}c` : "-",
+              size: s.chunks > 0 ? `${s.pages_indexed}p ${s.chunks}c` : `${s.pages_indexed}p`,
               // Pages came in by a crawl the rules drive, or by staff uploads.
               via: s.route === "upload" ? "upload" : "crawl",
               url: s.base_url,
