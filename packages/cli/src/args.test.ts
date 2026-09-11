@@ -24,9 +24,11 @@ describe("parseArgs value-taking flags", () => {
 
 describe("parseArgs bool flags", () => {
   it("does not treat bool flags as value-taking", () => {
-    const a = parseArgs(["--json", "--watch"]);
+    const a = parseArgs(["--json", "--watch", "--urgent"]);
     expect(a.bools.has("json")).toBe(true);
     expect(a.bools.has("watch")).toBe(true);
+    // `staff reindex <source> --urgent` takes no value.
+    expect(a.bools.has("urgent")).toBe(true);
     expect(a.positionals).toEqual([]);
   });
 
