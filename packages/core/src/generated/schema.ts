@@ -356,6 +356,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/staff/sources/{source_id}/index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Index Source
+         * @description Queue an index run over the stored crawl, without fetching anything.
+         *     Pages already indexed are skipped by their content hash, so this costs
+         *     only what is left. A priority below the default sends the job before the
+         *     other index work; 0 goes before probes and crawls too.
+         */
+        post: operations["index_source_v1_staff_sources__source_id__index_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/staff/sources/{source_id}/pages": {
         parameters: {
             query?: never;
@@ -394,28 +417,6 @@ export interface paths {
          *     again; a crawl that a dead browser cut short leaves such pages behind.
          */
         post: operations["recrawl_source_v1_staff_sources__source_id__recrawl_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/staff/sources/{source_id}/reindex": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reindex Source
-         * @description Index the stored crawl again without fetching: after a failed index
-         *     run or a scope change. An urgent run goes before every other job, which
-         *     is how a new source is judged while a long backlog indexes.
-         */
-        post: operations["reindex_source_v1_staff_sources__source_id__reindex_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1817,6 +1818,39 @@ export interface operations {
             };
         };
     };
+    index_source_v1_staff_sources__source_id__index_post: {
+        parameters: {
+            query?: {
+                priority?: number | null;
+            };
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     upload_page_v1_staff_sources__source_id__pages_put: {
         parameters: {
             query?: never;
@@ -1856,39 +1890,6 @@ export interface operations {
         parameters: {
             query?: {
                 failed_only?: boolean;
-            };
-            header?: never;
-            path: {
-                source_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reindex_source_v1_staff_sources__source_id__reindex_post: {
-        parameters: {
-            query?: {
-                urgent?: boolean;
             };
             header?: never;
             path: {

@@ -239,9 +239,9 @@ export class GrimoireClient {
     });
   }
 
-  reindexSource(sourceId: string, opts: { urgent?: boolean } = {}): Promise<JobOut> {
-    const query = opts.urgent ? "?urgent=true" : "";
-    return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/reindex${query}`, {
+  indexSource(sourceId: string, opts: { priority?: number } = {}): Promise<JobOut> {
+    const query = opts.priority === undefined ? "" : `?priority=${opts.priority}`;
+    return this.request<JobOut>(`/v1/staff/sources/${encodeURIComponent(sourceId)}/index${query}`, {
       method: "POST",
     });
   }

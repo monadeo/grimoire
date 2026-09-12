@@ -1839,6 +1839,50 @@ paths:
       security:
       - HTTPBearer: []
       summary: List Frontier
+  /v1/staff/sources/{source_id}/index:
+    post:
+      description: 'Queue an index run over the stored crawl, without fetching anything.
+
+        Pages already indexed are skipped by their content hash, so this costs
+
+        only what is left. A priority below the default sends the job before the
+
+        other index work; 0 goes before probes and crawls too.'
+      operationId: index_source_v1_staff_sources__source_id__index_post
+      parameters:
+      - in: path
+        name: source_id
+        required: true
+        schema:
+          format: uuid
+          title: Source Id
+          type: string
+      - in: query
+        name: priority
+        required: false
+        schema:
+          anyOf:
+          - maximum: 10
+            minimum: 0
+            type: integer
+          - type: 'null'
+          title: Priority
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOut'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Index Source
   /v1/staff/sources/{source_id}/pages:
     put:
       description: 'Store one fetched page for an upload source. The next crawl run
@@ -1918,46 +1962,6 @@ paths:
       security:
       - HTTPBearer: []
       summary: Recrawl Source
-  /v1/staff/sources/{source_id}/reindex:
-    post:
-      description: 'Index the stored crawl again without fetching: after a failed
-        index
-
-        run or a scope change. An urgent run goes before every other job, which
-
-        is how a new source is judged while a long backlog indexes.'
-      operationId: reindex_source_v1_staff_sources__source_id__reindex_post
-      parameters:
-      - in: path
-        name: source_id
-        required: true
-        schema:
-          format: uuid
-          title: Source Id
-          type: string
-      - in: query
-        name: urgent
-        required: false
-        schema:
-          default: false
-          title: Urgent
-          type: boolean
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/JobOut'
-          description: Successful Response
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-          description: Validation Error
-      security:
-      - HTTPBearer: []
-      summary: Reindex Source
   /v1/staff/tokens:
     post:
       operationId: mint_token_v1_staff_tokens_post

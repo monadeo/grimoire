@@ -88,12 +88,12 @@ These need a staff account.
 | `grimoire staff cancel <job_id>` | Stop a queued or running crawl or index |
 | `grimoire staff source <product\|id> [--watch] [--json]` | Where a source stands: route, scope, versions, crawl state, pages indexed, and the job it is in. `--watch` prints a line whenever that changes, until the job ends. |
 | `grimoire staff urls <product\|id> [--state <crawl state>] [--limit 50] [--json]` | Every URL of a source with its crawl state, failures first and why |
-| `grimoire staff source <product\|id> [--include <pattern>]... [--exclude <pattern>]... [--status active\|disabled] [--markdown on\|off] [--selector <css>\|none] [--executor worker\|queue] [--rate-delay <seconds>]` | Change what a source covers and how it is fetched. `--rate-delay` waits that many seconds between two pages, for sites that answer 429 at our pace; 0 clears it. `--selector` names the element that is the page's content, for example `.markdown-body` on GitHub pages; `none` clears it. Takes effect at the next reindex. `--executor` names who runs the source's jobs: `queue`, the default since server 0.27.3, or `worker` to pin it to a legacy worker process |
-| `grimoire staff source <product\|id> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo> [--tag-pattern <regex>])` | Correct how a source reads its version. Drops the chunks under the old label and reindexes from the stored crawl. |
+| `grimoire staff source <product\|id> [--include <pattern>]... [--exclude <pattern>]... [--status active\|disabled] [--markdown on\|off] [--selector <css>\|none] [--executor worker\|queue] [--rate-delay <seconds>] [--sitemap <url>]` | Change what a source covers and how it is fetched. `--rate-delay` waits that many seconds between two pages, for sites that answer 429 at our pace; 0 clears it. `--selector` names the element that is the page's content, for example `.markdown-body` on GitHub pages; `none` clears it. Takes effect at the next index run. `--executor` names who runs the source's jobs: `queue`, the default since server 0.27.3, or `worker` to pin it to a legacy worker process |
+| `grimoire staff source <product\|id> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo> [--tag-pattern <regex>])` | Correct how a source reads its version. Drops the chunks under the old label and indexes again from the stored crawl. |
 | `grimoire staff create <url> --product <name> (--rolling \| --fixed <v> \| --npm <pkg> \| --pypi <pkg> \| --github <owner/repo> [--tag-pattern <regex>]) [--include <pattern>]... [--exclude <pattern>]...` | Register a source the worker cannot fetch; its pages come in through `staff upload` |
 | `grimoire staff upload <product\|id> <page-url> <file.html>` | Store one fetched page for an upload source; `staff recrawl` then processes what was uploaded |
 | `grimoire staff recrawl <product\|id> [--failed]` | Fetch the site again. `--failed` fetches only the pages that failed last time and leaves the rest untouched |
-| `grimoire staff reindex <product\|id>` | Index the stored crawl again, no fetching |
+| `grimoire staff index <product\|id> [--priority 0-10]` | Queue an index run over the stored crawl, no fetching. Lower priority runs first; index work sits at 10 by default |
 | `grimoire staff purge <product\|id> --yes` | Delete a source and everything indexed from it |
 | `grimoire staff users [--json]` | Access grants |
 | `grimoire staff grant <subject> --name "..." [--staff on\|off]` | Grant access, and optionally make the account staff |
@@ -103,6 +103,6 @@ These need a staff account.
 `--markdown on` makes a source use the markdown its own site publishes (the "Copy page"
 button) instead of a browser crawl. `--include` and `--exclude` take a substring, or a
 regular expression behind `re:`. Changing scope marks out-of-scope pages for removal at
-the next reindex.
+the next index run.
 
 Apache-2.0. Source: [monadeo/grimoire](https://github.com/monadeo/grimoire).

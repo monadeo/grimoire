@@ -147,7 +147,7 @@ function describeSource(detail: SourceDetailOut): string {
     `indexed: ${detail.indexed_pages} page(s) at the current config`,
     `job: ${detail.job ? `${detail.job.kind} ${describeJob(detail.job)}` : "none running"}`,
   ];
-  if (detail.descoped_urls > 0) lines.push(`descoped: ${detail.descoped_urls} url(s) marked missing — run reindex to drop their chunks`);
+  if (detail.descoped_urls > 0) lines.push(`descoped: ${detail.descoped_urls} url(s) marked missing — run staff index to drop their chunks`);
   return lines.join("\n");
 }
 
@@ -395,7 +395,7 @@ async function main(argv: string[]): Promise<number> {
       }
       case "staff": {
         const usage =
-          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | workers [--json] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--selector css|none] [--executor worker|queue] [--rate-delay s] [--sitemap url] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> [--failed] | reindex <s> [--urgent] | purge <s> --yes';
+          'Usage: grimoire staff queue [--json] | approve <job_id> | reject <job_id> --reason "..." | users [--json] | grant <subject> --name "..." [--staff on|off] | revoke <subject> | token <name> --quota <per-day> | jobs [--source <s>] [--state <st>] [--kind <k>] [--limit n] | workers [--json] | cancel <job_id> | urls <s> [--state st] [--limit n] | create <url> --product <p> (--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]) | upload <s> <page-url> <file.html> | source <s> [--watch] [--include p]... [--exclude p]... [--status active|disabled] [--markdown on|off] [--selector css|none] [--executor worker|queue] [--rate-delay s] [--sitemap url] [--rolling|--fixed v|--npm p|--pypi p|--github o/r [--tag-pattern re]] | recrawl <s> [--failed] | index <s> [--priority 0-10] | purge <s> --yes';
         const [action, jobId] = args.positionals;
         if (action === "token") {
           const quota = intFlag(args, "quota", { min: 1, max: 1_000_000 });
@@ -444,10 +444,12 @@ async function main(argv: string[]): Promise<number> {
           process.stdout.write(`${describeJob(job)}\n`);
           return EXIT.ok;
         }
-        if (action === "reindex") {
+        if (action === "index") {
           if (!jobId) throw new UsageError(usage);
           const source = await resolveSourceId(client, jobId);
-          const job = await client.reindexSource(source, { urgent: args.bools.has("urgent") });
+          // Lower runs first. 10 is where every index job sits by default.
+          const priority = intFlag(args, "priority", { min: 0, max: 10 });
+          const job = await client.indexSource(source, { priority });
           process.stdout.write(`${describeJob(job)}\n`);
           return EXIT.ok;
         }

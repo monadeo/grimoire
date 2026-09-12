@@ -20,7 +20,6 @@ const BOOL_FLAGS = new Set([
   "debug",
   "no-launch-browser",
   "failed",
-  "urgent",
 ]);
 
 export function parseArgs(
